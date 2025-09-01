@@ -201,20 +201,44 @@
     // Load data
     init();
     async function init(){
-      skeleton(16);
-      try{
-        const res = await fetch(DATA_URL, {cache:'no-store'});
-        if(!res.ok) throw new Error('HTTP '+res.status);
-        const data = await res.json();
-        state.raw = Array.isArray(data) ? data : (data.items || []);
-      }catch(err){
-        console.error(err);
-        state.raw = [];
-      }
-      buildFilters();
-      apply();
-      bindUI();
+  skeleton(16);
+  try {
+    // Versuche: mehrere Dateien aus data/_list.json laden
+    const listRes = await fetch(DATA_LIST_URL, {cache:'no-store'});
+    if (listRes.ok) {
+      const files = await listRes.json();
+      const arrays = await Promise.all(
+        (files || []).map(p =>
+          fetch(String(p), {cache:'no-store'})
+            .then(r => r.ok ? r.json() : [])
+            .catch(()=>[])
+        )
+      );
+      state.raw = arrays.flat();
+    } else {
+      // Fallback: einzelne Datei (comics.json), damit es auch ohne Liste funktioniert
+      const res = await fetch(DATA_FALLBACK_URL, {cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data = await res.json();
+      state.raw = Array.isArray(data) ? data : (data.items || []);
     }
+  } catch(err) {
+    console.error(err);
+    state.raw = [];
+  }
+
+  // Deduplizieren per id (falls dieselbe Ausgabe in mehreren Dateien vorkommt)
+  const seen = new Set();
+  state.raw = state.raw.filter(x=>{
+    const id = (x.id || `${x.series||''}#${x.issue||''}-${x.title||''}`).toLowerCase();
+    if (seen.has(id)) return false; seen.add(id); return true;
+  });
+
+  buildFilters();
+  apply();
+  bindUI();
+}
+
 
     function skeleton(n){
       el.grid.innerHTML = '';
