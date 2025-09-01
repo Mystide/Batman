@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+  <!-- TEMP: harter Bild-Test -->
+<img id="coverTest" alt="COVER-TEST" style="display:block;margin:10px auto;max-width:200px;border:2px dashed #555;padding:6px;border-radius:8px">
   <meta charset="utf-8" />
   <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -402,6 +404,10 @@
       // simple word-wise includes
       return needle.split(/\s+/).every(tok => hay.includes(tok));
     }
+    // TEMP: Testet, ob ein S3-Cover auf deiner Seite grundsätzlich angezeigt werden kann
+document.getElementById('coverTest').src = "https://s3.amazonaws.com/comicgeeks/comics/covers/large-9010334.jpg";
+document.getElementById('coverTest').referrerPolicy = "no-referrer";
+document.getElementById('coverTest').crossOrigin = "anonymous";
   </script>
 </body>
 </html>
