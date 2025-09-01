@@ -356,7 +356,14 @@
             <i></i><span>${isRead? 'Gelesen':'Ungelesen'}</span>
           </button>
           <div class="cover-wrap">
-            ${x.cover ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" src="${escapeHtml(coverSrc(x.cover))}" referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\\'cover skeleton\\' style=\\'width:70%; height:70%\\'></div>');">` : '<div class="cover skeleton" style="width:70%; height:70%"></div>'}
+            ${x.cover ? `<img class="cover"
+       alt="${escapeHtml(x.title)} Cover"
+       loading="lazy" decoding="async" fetchpriority="low"
+       src="${escapeHtml(x.cover)}"
+       referrerpolicy="no-referrer" crossorigin="anonymous"
+       onerror="this.onerror=null; this.src='${escapeHtml(coverSrc(x.cover))}';"
+       onload="this.style.display='';">`
+  : '<div class="cover skeleton" style="width:70%; height:70%"></div>'}
             ${x.dcui ? `<a class="dcui" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener">DCUI</a>`:''}
           </div>
           <div class="content">
@@ -436,17 +443,16 @@
     }
     // Liefert eine sichere Bild-URL (Proxy für externe Hosts, lokal bleibt lokal)
     function coverSrc(u){
-      if(!u) return '';
-      // lokale Covers (z.B. "covers/foo.jpg") unverändert lassen:
-      if(/^\.?\/?covers\//i.test(u)) return u;
-      // http->https upgraden
-      let s = String(u).replace(/^https?:\/\//i,'');
-      // über images.weserv.nl proxyen (verhindert Hotlink/CORS/Referrer-Probleme)
-      return 'https://images.weserv.nl/?url='
+  if(!u) return '';
+  // lokale Dateien direkt nutzen
+  if(/^(\.?\/)?covers\//i.test(u)) return u;
+  // http/https/Schema-los entfernen: "https://", "http://", oder "//"
+  let s = String(u).replace(/^https?:\/\//i,'').replace(/^\/\//,'');
+  // über wsrv (weserv) proxyen
+  return 'https://images.weserv.nl/?url='
          + encodeURIComponent(s)
          + '&w=900&h=1300&fit=inside&we&il';
 }
-
   </script>
 </body>
 </html>
