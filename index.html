@@ -139,31 +139,26 @@
     }
 
     function normalize(item){
-  // mehrere mögliche Felder für das Cover abdecken
-  const cover =
-    item.cover ||
-    item.image ||
-    item.image_url ||
-    item.cover_url ||
-    item.coverImage ||
-    item.coverLink ||
-    item.thumbnail ||
-    item.thumb ||
-    '';
+  const id =
+    item.id ||
+    `${(item.series||'') }#${(item.issue||'') }-${(item.title||'')}`
+      .toLowerCase()
+      .replace(/\s+/g,'_');
 
-  const id = item.id || `${item.series||''}#${item.issue||''}-${item.title||''}`.toLowerCase().replace(/\s+/g,'_');
-  const chars = Array.isArray(item.characters) ? item.characters.join(', ') : (item.characters||'');
+  const chars = Array.isArray(item.characters)
+    ? item.characters.join(', ')
+    : (item.characters || '');
 
   return {
     id,
-    title: item.title||'Ohne Titel',
+    title: item.title || 'Ohne Titel',
     issue: item.issue ?? '',
-    year: Number(item.year)||'',
-    series: item.series||'Batman',
-    cover,                          // ← wichtig
+    year: Number(item.year) || '',
+    series: item.series || 'Batman',
+    cover: item.covers || '',   // ← wichtig: Plural!
     characters: chars,
-    event: item.event||'',
-    dcui: item.dcui||item.dcui_link||'',
+    event: item.event || '',
+    dcui: item.dcui || item.dcui_link || '',
     page_count: item.page_count ?? item.pages ?? '',
     format: item.format || ''
   };
@@ -184,7 +179,13 @@
         card.className='card';
         card.innerHTML=`
           <div class="cover-wrap">
-            ${x.cover? `<img class="cover" alt="${x.title} Cover" src="${x.cover}" referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.style.outline='2px solid red';">`:'<div class="cover skeleton"></div>'}
+            ${x.cover ? `<img class="cover"
+     alt="${escapeHtml(x.title)} Cover"
+     src="${escapeHtml(x.cover)}"
+     referrerpolicy="no-referrer"
+     crossorigin="anonymous"
+     onerror="this.style.outline='2px solid red'; this.title='Fehler: '+this.src">`
+  : '<div class="cover skeleton" style="width:70%; height:70%"></div>'}
           </div>
           <div class="content">
             <div class="h">${x.title} <small>#${x.issue}</small></div>
