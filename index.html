@@ -139,16 +139,36 @@
     }
 
     function normalize(item){
-      return {
-        id: item.id || `${item.series}#${item.issue}`,
-        title: item.title||'',
-        issue: item.issue||'',
-        year: item.year||'',
-        series: item.series||'',
-        cover: item.cover||'',
-        event: item.event||''
-      };
-    }
+  // mehrere mögliche Felder für das Cover abdecken
+  const cover =
+    item.cover ||
+    item.image ||
+    item.image_url ||
+    item.cover_url ||
+    item.coverImage ||
+    item.coverLink ||
+    item.thumbnail ||
+    item.thumb ||
+    '';
+
+  const id = item.id || `${item.series||''}#${item.issue||''}-${item.title||''}`.toLowerCase().replace(/\s+/g,'_');
+  const chars = Array.isArray(item.characters) ? item.characters.join(', ') : (item.characters||'');
+
+  return {
+    id,
+    title: item.title||'Ohne Titel',
+    issue: item.issue ?? '',
+    year: Number(item.year)||'',
+    series: item.series||'Batman',
+    cover,                          // ← wichtig
+    characters: chars,
+    event: item.event||'',
+    dcui: item.dcui||item.dcui_link||'',
+    page_count: item.page_count ?? item.pages ?? '',
+    format: item.format || ''
+  };
+}
+
 
     function apply(){
       let items = state.raw.map(normalize);
