@@ -1,21 +1,19 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <!-- TEMP: harter Bild-Test -->
-<img id="coverTest" alt="COVER-TEST" style="display:block;margin:10px auto;max-width:200px;border:2px dashed #555;padding:6px;border-radius:8px">
   <meta charset="utf-8" />
   <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Batman Comic Guide</title>
   <style>
     :root{
-      --bg:#0b0d12;            /* near-black */
-      --bg-soft:#11141b;       /* card background */
-      --ink:#e7ecf3;           /* primary text */
-      --muted:#9aa4b2;         /* secondary text */
-      --accent:#f1c40f;        /* bat-yellow */
-      --accent-2:#ffd761;      /* lighter yellow */
-      --outline:#1c2230;       /* borders */
+      --bg:#0b0d12;
+      --bg-soft:#11141b;
+      --ink:#e7ecf3;
+      --muted:#9aa4b2;
+      --accent:#f1c40f;
+      --accent-2:#ffd761;
+      --outline:#1c2230;
       --ok:#31c48d;
       --danger:#f05252;
     }
@@ -28,9 +26,7 @@
         linear-gradient(180deg, #0a0c11 0%, #080a0f 100%);
       color:var(--ink);
       font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;
-      letter-spacing: .2px;
     }
-    /* ---- Layout ---- */
     .container{max-width:1200px; margin:0 auto; padding:24px;}
     header{
       position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8px);
@@ -40,10 +36,10 @@
     .head{display:flex; gap:16px; align-items:center; padding:14px 24px;}
     .logo{width:44px; height:44px; display:grid; place-items:center; border-radius:12px;
       background: radial-gradient(120% 140% at 30% 10%, #1b1f2a 0%, #0e1118 60%);
-      border:1px solid var(--outline); box-shadow: 0 10px 30px rgba(0,0,0,.25) inset;
+      border:1px solid var(--outline);
     }
     .logo svg{width:28px; height:28px; fill:var(--accent)}
-    .title{font-size:20px; font-weight:700; letter-spacing:.4px}
+    .title{font-size:20px; font-weight:700;}
     .subtitle{color:var(--muted); font-size:13px}
 
     .toolbar{display:grid; gap:10px; grid-template-columns: 1fr repeat(5, minmax(120px, 170px)); align-items:end; padding: 0 24px 16px;}
@@ -53,7 +49,6 @@
       background:var(--bg-soft); color:var(--ink); border:1px solid var(--outline);
       border-radius:12px; padding:10px 12px; outline:none;
     }
-    input[type="text"]:focus, select:focus{border-color:#2b3346; box-shadow:0 0 0 3px rgba(241,196,15,.12)}
 
     .stats{display:flex; gap:14px; align-items:center; flex-wrap:wrap; color:var(--muted); padding: 2px 24px 16px;}
     .badge{display:inline-flex; gap:6px; align-items:center; background:#0f1320; border:1px solid var(--outline); padding:6px 10px; border-radius:999px; font-size:12px}
@@ -63,351 +58,126 @@
     main{padding: 8px 24px 40px;}
     .grid{display:grid; gap:14px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));}
 
-    /* ---- Card ---- */
-    .card{position:relative; border:1px solid var(--outline); background:linear-gradient(180deg, #101521, #0d111a); border-radius:16px; overflow:hidden; transition:transform .15s ease, box-shadow .15s ease}
-    .card:hover{transform: translateY(-2px); box-shadow:0 10px 30px rgba(0,0,0,.35)}
-
+    .card{position:relative; border:1px solid var(--outline); background:linear-gradient(180deg, #101521, #0d111a); border-radius:16px; overflow:hidden;}
     .cover-wrap{aspect-ratio: 3/4.2; display:grid; place-items:center; background:#0c0f16; border-bottom:1px solid var(--outline)}
-    .cover{max-width:100%; max-height:100%; object-fit:contain; image-rendering:auto;}
+    .cover{max-width:100%; max-height:100%; object-fit:contain;}
 
     .content{padding:10px 12px 12px; display:grid; gap:8px}
     .h{font-weight:700; font-size:14px}
     .meta{display:flex; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:12px}
     .tag{border:1px solid var(--outline); padding:2px 8px; border-radius:999px;}
 
-    /* Read toggle */
-    .read-toggle{position:absolute; top:10px; right:10px; background:rgba(0,0,0,.45); border:1px solid var(--outline); border-radius:12px; padding:6px 8px; display:flex; gap:6px; align-items:center; font-size:12px; cursor:pointer; user-select:none}
-    .read-toggle i{width:10px; height:10px; border-radius:999px; border:1px solid var(--outline); display:inline-block; background:#121722}
+    .read-toggle{position:absolute; top:10px; right:10px; background:rgba(0,0,0,.45); border:1px solid var(--outline); border-radius:12px; padding:6px 8px; display:flex; gap:6px; align-items:center; font-size:12px; cursor:pointer}
+    .read-toggle i{width:10px; height:10px; border-radius:999px; border:1px solid var(--outline); background:#121722}
     .read-toggle.active i{background:var(--ok); border-color:rgba(0,0,0,.35)}
 
-    /* DCUI badge bottom-right */
     .dcui{position:absolute; bottom:8px; right:8px; font-size:10px; padding:4px 6px; border-radius:999px; background:rgba(0,0,0,.55); border:1px solid var(--outline)}
 
-    /* Skeleton */
     .skeleton{animation: shimmer 1.4s infinite linear; background: linear-gradient(90deg, rgba(255,255,255,0.07) 0, rgba(255,255,255,0.11) 40%, rgba(255,255,255,0.07) 80%); background-size:200% 100%;}
     @keyframes shimmer{ from{ background-position-x: 200% } to{ background-position-x: -200% } }
 
     .empty{padding:28px; text-align:center; color:var(--muted); border:1px dashed var(--outline); border-radius:16px}
-
-    /* Footer */
     footer{padding:24px; color:var(--muted); text-align:center; border-top:1px solid var(--outline)}
-
-    /* Small screens */
-    @media (max-width: 900px){
-      .toolbar{grid-template-columns: 1fr 1fr;}
-    }
   </style>
 </head>
 <body>
   <header>
     <div class="head container">
-      <div class="logo" aria-hidden="true">
-        <!-- minimalist bat logo -->
-        <svg viewBox="0 0 64 32" role="img" aria-label="Batman Logo">
-          <path d="M32 4c-5 6-11-2-18 0 2 3 2 6 0 9-3-2-7-1-12 2 6 2 10 6 12 12 4-1 7-3 9-6 1 4 3 7 9 7s8-3 9-7c2 3 5 5 9 6 2-6 6-10 12-12-5-3-9-4-12-2-2-3-2-6 0-9-7-2-13 6-18 0z"/>
-        </svg>
-      </div>
-      <div>
-        <div class="title">Batman Comic Guide</div>
-        <div class="subtitle">Dark, clean & schnell – mit Suche, Filtern & Fortschritt</div>
-      </div>
+      <div class="logo"><svg viewBox="0 0 64 32"><path d="M32 4c-5 6-11-2-18 0 2 3 2 6 0 9-3-2-7-1-12 2 6 2 10 6 12 12 4-1 7-3 9-6 1 4 3 7 9 7s8-3 9-7c2 3 5 5 9 6 2-6 6-10 12-12-5-3-9-4-12-2-2-3-2-6 0-9-7-2-13 6-18 0z"/></svg></div>
+      <div><div class="title">Batman Comic Guide</div><div class="subtitle">Dark, clean & schnell – mit Suche, Filtern & Fortschritt</div></div>
     </div>
-    <div class="toolbar container" role="region" aria-label="Filter und Suche">
+    <div class="toolbar container">
       <div class="field" style="grid-column: span 2;">
-        <label for="q">Suche (Titel, Charaktere, Event)</label>
-        <input id="q" type="text" placeholder="z.B. Hush, Joker, Court of Owls…" autocomplete="off" />
+        <label for="q">Suche</label>
+        <input id="q" type="text" placeholder="z.B. Hush, Joker…" />
       </div>
-      <div class="field">
-        <label for="series">Serie</label>
-        <select id="series"><option value="">Alle</option></select>
-      </div>
-      <div class="field">
-        <label for="year">Jahr</label>
-        <select id="year"><option value="">Alle</option></select>
-      </div>
-      <div class="field">
-        <label for="event">Event/Storyline</label>
-        <select id="event"><option value="">Alle</option></select>
-      </div>
-      <div class="field">
-        <label for="sort">Sortierung</label>
-        <select id="sort">
+      <div class="field"><label for="series">Serie</label><select id="series"><option value="">Alle</option></select></div>
+      <div class="field"><label for="year">Jahr</label><select id="year"><option value="">Alle</option></select></div>
+      <div class="field"><label for="event">Event</label><select id="event"><option value="">Alle</option></select></div>
+      <div class="field"><label for="sort">Sortierung</label><select id="sort">
           <option value="yearAsc">Jahr ↑</option>
           <option value="yearDesc">Jahr ↓</option>
           <option value="issueAsc">Heftnummer ↑</option>
           <option value="issueDesc">Heftnummer ↓</option>
           <option value="titleAsc">Titel A–Z</option>
-        </select>
-      </div>
+      </select></div>
     </div>
     <div class="stats container">
       <span class="badge"><strong id="count">0</strong> Einträge</span>
       <span class="badge">Gelesen: <strong id="readCount">0</strong></span>
-      <div class="bar" aria-hidden="true"><i id="progress"></i></div>
-      <button id="exportBtn" class="badge" title="Lesefortschritt exportieren">Export</button>
-      <label class="badge" style="cursor:pointer" title="Lesefortschritt importieren">
-        Import <input id="importInput" type="file" accept="application/json" hidden>
-      </label>
-      <button id="resetBtn" class="badge" title="Lesefortschritt zurücksetzen" style="color:#f9c74f">Reset</button>
+      <div class="bar"><i id="progress"></i></div>
     </div>
   </header>
 
   <main class="container">
-    <div id="grid" class="grid" aria-live="polite"></div>
-    <div id="empty" class="empty" hidden>
-      Keine Treffer. Passe Suche/Filter an.
-    </div>
+    <div id="grid" class="grid"></div>
+    <div id="empty" class="empty" hidden>Keine Treffer.</div>
   </main>
-
-  <footer>
-    Made with ♥ for Gotham. Tipp: Drücke <kbd>/</kbd> für die Suche.
-  </footer>
+  <footer>Made with ♥ for Gotham.</footer>
 
   <script>
-    // --- Config ---
-    // Datenquellen: mehrere aus data/list.json oder Fallback comics.json
     const DATA_LIST_URL = './data/list.json';
     const DATA_FALLBACK_URL = './comics.json';
-
     const $ = sel => document.querySelector(sel);
-    const $$ = sel => Array.from(document.querySelectorAll(sel));
+    const state = { raw:[], view:[], readSet:new Set(JSON.parse(localStorage.getItem('batman-read')||'[]')) };
+    const el = { grid:$('#grid'), empty:$('#empty'), q:$('#q'), series:$('#series'), year:$('#year'), event:$('#event'), sort:$('#sort'), count:$('#count'), readCount:$('#readCount'), progress:$('#progress') };
 
-    const state = {
-      raw: [],
-      view: [],
-      readSet: new Set(JSON.parse(localStorage.getItem('batman-read')||'[]'))
-    };
-
-    const el = {
-      grid: $('#grid'), empty: $('#empty'),
-      q: $('#q'), series: $('#series'), year: $('#year'), event: $('#event'), sort: $('#sort'),
-      count: $('#count'), readCount: $('#readCount'), progress: $('#progress'),
-      exportBtn: $('#exportBtn'), importInput: $('#importInput'), resetBtn: $('#resetBtn')
-    };
-
-    // Keyboard focus to search
-    window.addEventListener('keydown', (e)=>{ if(e.key==='/' && document.activeElement!==el.q){ e.preventDefault(); el.q.focus(); el.q.select(); } });
-
-    // Load data
     init();
     async function init(){
-      skeleton(16);
       try{
-        const listRes = await fetch(DATA_LIST_URL, {cache:'no-store'});
+        const listRes = await fetch(DATA_LIST_URL);
         if(listRes.ok){
           const files = await listRes.json();
-          const arrays = await Promise.all(
-            (files||[]).map(p=> fetch(String(p), {cache:'no-store'}).then(r=> r.ok?r.json():[]).catch(()=>[]))
-          );
+          const arrays = await Promise.all(files.map(p=> fetch(p).then(r=>r.ok?r.json():[])));
           state.raw = arrays.flat();
-        } else {
-          // Fallback auf einzelne Datei
-          const res = await fetch(DATA_FALLBACK_URL, {cache:'no-store'});
-          if(!res.ok) throw new Error('HTTP '+res.status);
-          const data = await res.json();
-          state.raw = Array.isArray(data) ? data : (data.items || []);
+        }else{
+          const res = await fetch(DATA_FALLBACK_URL);
+          if(res.ok){ state.raw = await res.json(); }
         }
-      }catch(err){
-        console.error(err);
-        state.raw = [];
-      }
-      // Deduplizieren per id
-      const seen = new Set();
-      state.raw = state.raw.filter(x=>{
-        const id = (x.id || `${x.series||''}#${x.issue||''}-${x.title||''}`).toLowerCase();
-        if(seen.has(id)) return false; seen.add(id); return true;
-      });
-
-      buildFilters();
+      }catch(e){ console.error(e); }
       apply();
-      bindUI();
-    }
-
-    function skeleton(n){
-      el.grid.innerHTML = '';
-      for(let i=0;i<n;i++){
-        const card = document.createElement('div');
-        card.className='card';
-        card.innerHTML = `
-          <div class="cover-wrap skeleton"></div>
-          <div class="content">
-            <div class="h skeleton" style="height:14px; width:70%"></div>
-            <div class="meta">
-              <span class="skeleton" style="height:10px; width:54%"></span>
-              <span class="skeleton" style="height:10px; width:30%"></span>
-            </div>
-          </div>`;
-        el.grid.appendChild(card);
-      }
     }
 
     function normalize(item){
-      const id = item.id || `${item.series||''}#${item.issue||''}-${item.title||''}`.toLowerCase().replace(/\s+/g,'_');
-      const chars = Array.isArray(item.characters) ? item.characters.join(', ') : (item.characters||'');
       return {
-        id,
-        title: item.title||'Ohne Titel',
-        issue: item.issue ?? '',
-        year: Number(item.year)||'',
-        series: item.series||'Batman',
+        id: item.id || `${item.series}#${item.issue}`,
+        title: item.title||'',
+        issue: item.issue||'',
+        year: item.year||'',
+        series: item.series||'',
         cover: item.cover||'',
-        characters: chars,
-        event: item.event||'',
-        dcui: item.dcui||item.dcui_link||'',
-        page_count: item.page_count ?? item.pages ?? '',
-        format: item.format || ''
+        event: item.event||''
       };
     }
 
-    function buildFilters(){
-      const items = state.raw.map(normalize);
-      const bySeries = new Set(items.map(x=>x.series).filter(Boolean));
-      const byEvent  = new Set(items.map(x=>x.event).filter(Boolean));
-      const byYear   = new Set(items.map(x=>x.year).filter(Boolean));
-
-      fillSelect(el.series, ['Alle', ...[...bySeries].sort()]);
-      fillSelect(el.event,  ['Alle', ...[...byEvent].sort()]);
-      fillSelect(el.year,   ['Alle', ...[...byYear].sort((a,b)=>a-b).map(String)]);
-    }
-
-    function fillSelect(select, items){
-      const cur = select.value;
-      select.innerHTML = items.map((v,i)=>{
-        const val = i===0 ? '' : v;
-        const label = v;
-        return `<option value="${escapeHtml(val)}">${escapeHtml(label)}</option>`
-      }).join('');
-      if([...
-        select.options].some(o=>o.value===cur)) select.value=cur;
-    }
-
-    function bindUI(){
-      [el.q, el.series, el.year, el.event, el.sort].forEach(c=> c.addEventListener('input', apply));
-      el.exportBtn.addEventListener('click', exportProgress);
-      el.importInput.addEventListener('change', importProgress);
-      el.resetBtn.addEventListener('click', ()=>{ if(confirm('Fortschritt wirklich zurücksetzen?')){ state.readSet.clear(); persistRead(); apply(); } });
-    }
-
     function apply(){
-      const q = el.q.value.trim().toLowerCase();
-      const fSeries = el.series.value;
-      const fYear = el.year.value;
-      const fEvent = el.event.value;
-
-      let items = state.raw.map(normalize).filter(x=>{
-        if(fSeries && x.series!==fSeries) return false;
-        if(fYear && String(x.year)!==String(fYear)) return false;
-        if(fEvent && x.event!==fEvent) return false;
-        if(q){
-          const hay = `${x.title} ${x.characters} ${x.event} ${x.series}`.toLowerCase();
-          if(!fuzzyIncludes(hay, q)) return false;
-        }
-        return true;
-      });
-
-      // Sort
-      const sort = el.sort.value;
-      items.sort((a,b)=>{
-        switch(sort){
-          case 'yearAsc':  return (a.year||0) - (b.year||0) || cmpIssue(a.issue,b.issue);
-          case 'yearDesc': return (b.year||0) - (a.year||0) || cmpIssue(a.issue,b.issue);
-          case 'issueAsc': return cmpIssue(a.issue,b.issue);
-          case 'issueDesc':return -cmpIssue(a.issue,b.issue);
-          case 'titleAsc': return (a.title).localeCompare(b.title);
-          default: return 0;
-        }
-      });
-
+      let items = state.raw.map(normalize);
       state.view = items;
       render();
-      updateStats();
-    }
-
-    function cmpIssue(a,b){
-      const pa = parseFloat(a)||0, pb=parseFloat(b)||0;
-      return pa===pb ? String(a).localeCompare(String(b)) : pa-pb;
+      el.count.textContent = items.length;
     }
 
     function render(){
-      el.grid.innerHTML = '';
+      el.grid.innerHTML='';
       for(const x of state.view){
-        const card = document.createElement('article');
-        card.className = 'card';
-        const isRead = state.readSet.has(x.id);
-        card.innerHTML = `
-          <button class="read-toggle ${isRead?'active':''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}" title="Gelesen umschalten">
-            <i></i><span>${isRead? 'Gelesen':'Ungelesen'}</span>
-          </button>
+        const card=document.createElement('article');
+        card.className='card';
+        card.innerHTML=`
           <div class="cover-wrap">
-            ${x.cover ? `<img class="cover"
-                 alt="${escapeHtml(x.title)} Cover"
-                 loading="lazy"
-                 src="${escapeHtml(x.cover)}"
-                 referrerpolicy="no-referrer"
-                 crossorigin="anonymous"
-                 onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\\'cover skeleton\\' style=\\'width:70%; height:70%\\'></div>');">`
-              : '<div class="cover skeleton" style="width:70%; height:70%"></div>'}
-            ${x.dcui ? `<a class="dcui" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener">DCUI</a>`:''}
+            ${x.cover? `<img class="cover" alt="${x.title} Cover" src="${x.cover}" referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.style.outline='2px solid red';">`:'<div class="cover skeleton"></div>'}
           </div>
           <div class="content">
-            <div class="h" title="${escapeHtml(x.series)}">${escapeHtml(x.title)} <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small></div>
+            <div class="h">${x.title} <small>#${x.issue}</small></div>
             <div class="meta">
-              <span class="tag" title="Serie">${escapeHtml(shortSeries(x.series))}</span>
-              ${x.year? `<span class="tag" title="Jahr">${x.year}</span>`:''}
-              ${x.event? `<span class="tag" title="Event/Storyline">${escapeHtml(x.event)}</span>`:''}
+              <span class="tag">${x.series}</span>
+              ${x.year? `<span class="tag">${x.year}</span>`:''}
+              ${x.event? `<span class="tag">${x.event}</span>`:''}
             </div>
           </div>`;
-
-        card.querySelector('.read-toggle').addEventListener('click', (e)=>{
-          e.preventDefault(); e.stopPropagation();
-          toggleRead(x.id);
-          const btn = e.currentTarget;
-          const active = state.readSet.has(x.id);
-          btn.classList.toggle('active', active);
-          btn.setAttribute('aria-pressed', active);
-          btn.querySelector('span').textContent = active ? 'Gelesen' : 'Ungelesen';
-          updateStats();
-        });
-
         el.grid.appendChild(card);
       }
-      el.empty.hidden = state.view.length !== 0;
+      el.empty.hidden=state.view.length!==0;
     }
-
-    function toggleRead(id){
-      if(state.readSet.has(id)) state.readSet.delete(id); else state.readSet.add(id);
-      persistRead();
-    }
-    function persistRead(){
-      localStorage.setItem('batman-read', JSON.stringify([...state.readSet]));
-    }
-
-    function updateStats(){
-      el.count.textContent = String(state.view.length);
-      // read count based on all or current view? We show global progress.
-      const total = state.raw.length || 1;
-      const read = [...state.readSet].filter(id => state.raw.some(item => (item.id||`${item.series||''}#${item.issue||''}-${item.title||''}`.toLowerCase().replace(/\s+/g,'_'))===id)).length;
-      el.readCount.textContent = String(read);
-      const pct = Math.min(100, Math.round((read/total)*100));
-      el.progress.style.width = pct+'%';
-      el.progress.title = pct+"% abgeschlossen";
-    }
-
-    // --- Helpers ---
-    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
-    function shortSeries(s){
-      // Turn "Batman (2016)" into "Batman ’16" for compact tag
-      const m = /^(.*)\((\d{4})\)\s*$/.exec(s||'');
-      return m ? `${m[1].trim()} ’${String(m[2]).slice(2)}` : s;
-    }
-    function fuzzyIncludes(hay, needle){
-      // simple word-wise includes
-      return needle.split(/\s+/).every(tok => hay.includes(tok));
-    }
-    // TEMP: Testet, ob ein S3-Cover auf deiner Seite grundsätzlich angezeigt werden kann
-document.getElementById('coverTest').src = "https://s3.amazonaws.com/comicgeeks/comics/covers/large-9010334.jpg";
-document.getElementById('coverTest').referrerPolicy = "no-referrer";
-document.getElementById('coverTest').crossOrigin = "anonymous";
   </script>
 </body>
 </html>
