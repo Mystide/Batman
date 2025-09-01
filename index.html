@@ -356,7 +356,7 @@
             <i></i><span>${isRead? 'Gelesen':'Ungelesen'}</span>
           </button>
           <div class="cover-wrap">
-            ${x.cover ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" src="${escapeHtml(x.cover)}">` : '<div class="cover skeleton" style="width:70%; height:70%"></div>'}
+            ${x.cover ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer" onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\\'cover skeleton\\' style=\\'width:70%; height:70%\\'></div>');">` : '<div class="cover skeleton" style="width:70%; height:70%"></div>'}
             ${x.dcui ? `<a class="dcui" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener">DCUI</a>`:''}
           </div>
           <div class="content">
