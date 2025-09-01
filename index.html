@@ -1,0 +1,635 @@
+Weiter zum Inhalt
+Du:
+Erinnerst du dich an unser Batman Comic Guide Projekt? https://github.com/Mystide/DC-Comics-Test
+Ich möchte die Seite in einem ansprechenderen Design haben
+ChatGPT:
+
+Yes! Ich hab dir eine moderne, dunkle Batman-UI als einzelne HTML-Datei gebaut – inkl. Suche, Filtern, schöner Cards, Fortschritts-Tracking (localStorage) und DCUI-Badge. Du siehst sie rechts im Canvas.
+
+So nutzt du sie direkt in deinem Repo:
+
+    Lege neben deiner Seite eine comics.json an (oder passe DATA_URL im Code an).
+    Erwartetes Schema pro Eintrag (minimal):
+
+    {
+      "id": "batman-2016-1",
+      "title": "Batman",
+      "issue": "1",
+      "year": 2016,
+      "series": "Batman (2016)",
+      "cover": "https://…/cover.jpg",
+      "characters": ["Batman", "Catwoman"],
+      "event": "I Am Gotham",
+      "dcui": "https://www.dcuniverseinfinite.com/…"
+    }
+
+    (Arrays/Strings bei characters werden automatisch normalisiert.)
+
+    Ersetze deine aktuelle Startseite durch die Canvas-Datei oder binde den Inhalt in deine bestehende Page ein.
+
+    Prüfe auf Mobilgeräten: Covers sind object-fit: contain (kein harter Zoom), wie von dir gewünscht.
+
+    Fortschritt exportieren/importieren: oben rechts über Export / Import / Reset.
+
+Wenn du möchtest, passe ich das sofort auf deine konkrete Ordnerstruktur im GitHub-Repo an (z. B. Pfade, Dateinamen, vorhandenes JSON, zusätzliche Felder wie page_count, format, etc.) oder baue gleich eine zweite Variante als React-Komponente für spätere Erweiterungen.
+Du:
+wie machen wir es am besten? ich habe die jsons alle gespeichert und möchte weiterhin mit github arbeiten. können gerne das feld von ganz vorne aufräumen bzw ganz neu anfangen mit dem neuen design.
+ChatGPT:
+
+Perfekt — lass uns „neu aufsetzen“, aber deine vorhandenen JSONs weiterverwenden. Ich habe die Canvas-Seite schon teilweise dafür vorbereitet (neues Meta-Schema mit page_count & format ist drin). Beim Versuch, direkt noch mehr Code live zu ändern (Mehrdatei-Support + URL-Filter), ist ein automatisches Update fehlgeschlagen. Kein Drama: ich gebe dir unten die exakten Snippets, die du 1× in deine index.html (Canvas-Datei) einfügst/ersetzt, plus eine kleine data/_list.json. Danach läuft alles sauber über GitHub Pages — mit neuem Design, mehreren JSON-Dateien und teilbaren Filtern.
+Plan (kurz)
+
+    Branch anlegen (optional, aber sauber): redesign.
+
+    Deine Canvas-index.html ins Repo kopieren (root).
+
+    Datenliste anlegen: data/_list.json → listet alle deine bestehenden JSONs.
+
+    In index.html drei kleine Code-Blöcke ersetzen/einfügen (siehe unten), damit mehrere JSONs geladen & Filter im URL geteilt werden.
+
+    GitHub Pages aktivieren (Settings → Pages → Branch main//root).
+
+    Optional: später Feinschliff (Service Worker Cache, Gist-Sync, weitere Filter).
+
+1) data/_list.json
+
+Lege diese Datei an (Pfad: data/_list.json) und trage deine JSONs ein:
+
+[
+  "data/batman.json",
+  "data/detective_comics.json",
+  "data/legends_of_the_dark_knight.json"
+]
+
+(Erweitere die Liste beliebig. Pfade relativ zur index.html.)
+2) In index.html – Code-Snippets
+A) Config-Block (ersetzt den bisherigen // --- Config --- Teil oben im <script>)
+
+// --- Config ---
+// Datenquellen-Strategie:
+// 1) Wenn vorhanden, lädt die App eine Dateiliste unter ./data/_list.json (Array aus Pfaden),
+//    z.B.: ["data/batman.json","data/detective_comics.json"].
+// 2) Fallback: ./comics.json (einzelne Datei, wie bisher).
+const DATA_LIST_URL = './data/_list.json';
+const DATA_FALLBACK_URL = './comics.json';
+
+// Erwartetes Datenschema (Array von Ausgaben):
+// {
+//   id: string (optional, sonst generiert),
+//   title: string,
+//   issue: string|number,
+//   year: number,
+//   series: string,               // z.B. "Batman (2016)"
+//   cover: string,                // Hauptcover-URL
+//   characters: string[]|string,  // wird zu String normalisiert
+//   event: string|undefined,      // z.B. "Hush"
+//   dcui: string|undefined,       // DC Universe Infinite Link
+//   page_count: number|undefined,
+//   format: string|undefined      // z.B. "Heft", "Annual", "One-Shot"
+// }
+
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+B) init() ersetzen (Mehrdatei-Laden + Deduplizieren + URL-Restore)
+
+// Load data
+init();
+async function init(){
+  skeleton(16);
+  try{
+    const listRes = await fetch(DATA_LIST_URL, {cache:'no-store'});
+    if(listRes.ok){
+      const files = await listRes.json();
+      const arrays = await Promise.all(
+        (files || []).map(p =>
+          fetch(String(p), {cache:'no-store'})
+            .then(r => r.ok ? r.json() : [])
+            .catch(() => [])
+        )
+      );
+      state.raw = arrays.flat();
+    } else {
+      // Fallback auf einzelne Datei
+      const res = await fetch(DATA_FALLBACK_URL, {cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data = await res.json();
+      state.raw = Array.isArray(data) ? data : (data.items || []);
+    }
+  }catch(err){
+    console.error(err);
+    state.raw = [];
+  }
+  // Deduplizieren per id
+  const seen = new Set();
+  state.raw = state.raw.filter(x=>{
+    const id = (x.id || `${x.series||''}#${x.issue||''}-${x.title||''}`).toLowerCase();
+    if(seen.has(id)) return false; seen.add(id); return true;
+  });
+  buildFilters();
+  restoreFiltersFromURL();
+  apply();
+  bindUI();
+}
+
+C) URL-Sharing der Filter (2 Mini-Änderungen)
+
+    In bindUI() die Input-Listener leicht anpassen:
+
+function bindUI(){
+  [el.q, el.series, el.year, el.event, el.sort]
+    .forEach(c => c.addEventListener('input', ()=>{ apply(); persistFiltersToURL(); }));
+  el.exportBtn.addEventListener('click', exportProgress);
+  el.importInput.addEventListener('change', importProgress);
+  el.resetBtn.addEventListener('click', ()=>{
+    if(confirm('Fortschritt wirklich zurücksetzen?')){
+      state.readSet.clear(); persistRead(); apply();
+    }
+  });
+}
+
+    Unter deinen Helper-Funktionen diese zwei Funktionen einfügen:
+
+// Shareable filter state via URL (?q=...&series=...)
+function persistFiltersToURL(){
+  const params = new URLSearchParams();
+  if(el.q.value.trim()) params.set('q', el.q.value.trim());
+  if(el.series.value)   params.set('series', el.series.value);
+  if(el.year.value)     params.set('year', el.year.value);
+  if(el.event.value)    params.set('event', el.event.value);
+  if(el.sort.value && el.sort.value!=='yearAsc') params.set('sort', el.sort.value);
+  const url = `${location.pathname}?${params.toString()}`;
+  history.replaceState(null, '', url);
+}
+function restoreFiltersFromURL(){
+  const p = new URLSearchParams(location.search);
+  if(p.has('q'))      el.q.value = p.get('q');
+  if(p.has('series')) el.series.value = p.get('series');
+  if(p.has('year'))   el.year.value = p.get('year');
+  if(p.has('event'))  el.event.value = p.get('event');
+  if(p.has('sort'))   el.sort.value = p.get('sort');
+}
+
+    Hinweis: Dein Canvas-Code enthält bereits die Logik für page_count und format (Anzeige als Tags). Du musst dafür in deinen JSONs nur die Felder setzen. Alles andere (Suche/Filter/Progress) bleibt wie gewohnt.
+
+3) Repo-Struktur (Vorschlag)
+
+DC-Comics-Test/
+├─ index.html            ← neue Seite (Canvas)
+├─ data/
+│  ├─ _list.json         ← Liste aller JSON-Dateien
+│  ├─ batman.json
+│  ├─ detective_comics.json
+│  └─ …
+└─ assets/               ← optional: Logos, Favicons, etc.
+
+4) GitHub Pages
+
+    Settings → Pages → Source: Deploy from a branch → Branch main → Folder /root.
+
+    Warten bis die Page deployt ist, dann Seite öffnen.
+
+    Tipp: Falls Covers von extern kommen, achte auf HTTPS & CORS.
+
+5) Optionaler Feinschliff (wenn du magst)
+
+    Service Worker für Offline-Caching der JSONs/Cover.
+
+    Gist-Sync für den Lesefortschritt (du hattest das früher gewünscht).
+
+    Weitere Filter (z. B. „nur ungelesen“, „nur Annuals/One-Shots“, „Seitenumfang ≥ X“).
+
+    Sortierung um format/event erweitern.
+
+    Section-Header (z. B. nach Jahrzehnt gruppieren).
+
+Wenn du willst, übernehme ich das Einpflegen der drei Snippets direkt in der Canvas-Datei (so dass du nur noch kopieren musst) oder ich passe sie gleich exakt auf deine aktuellen Dateinamen an. Sag mir einfach kurz, wie deine JSON-Pfade heißen (oder poste die data/_list.json), dann baue ich’s sofort ein.
+Du:
+lass uns ganz neu beginnen. schritt für schritt, damit ich auch mitkomme. bespreche alles mit mir. lass uns einen plan machen
+ChatGPT:
+
+Yes—neu und ruhig Schritt für Schritt. Hier ist der Plan, dann starten wir sofort mit Schritt 1.
+Plan (kurz & klar)
+
+    Branch & Ordnerstruktur: neuen Branch redesign anlegen, Ordner data/ erstellen, deine vorhandenen JSONs dort hinein.
+
+    Datenliste: data/_list.json anlegen, die alle JSON-Dateien aufzählt.
+
+    Seite anschließen: In index.html den Loader auf Mehrdatei-Modus umstellen (mini Code-Änderung).
+
+    Design-Finish: Feinschliff (Tags, Filter, mobile, Performance).
+
+    Komfort: URL-teilbare Filter, Export/Import (ist schon drin), optional Gist-Sync.
+
+    Deploy & Check: GitHub Pages einschalten, kurzer Funktionstest.
+
+Schritt 1: Branch & Daten vorbereiten (GitHub Web-UI)
+
+Ziel: deine JSONs liegen unter data/, plus eine Liste data/_list.json.
+
+A. Branch anlegen (empfohlen)
+
+    Auf GitHub ins Repo → Branch-Dropdown → “Find or create a branch” → redesign → Create.
+
+B. Ordner & Dateien
+
+    In Branch redesign: Add file → Upload files → lade deine bisherigen JSONs in data/ hoch (z. B. data/batman.json, data/detective_comics.json, …). Commit.
+
+    Add file → Create new file → Name: data/_list.json → Inhalt (Passe Dateinamen an!):
+
+[
+  "data/batman.json",
+  "data/detective_comics.json"
+]
+
+→ Commit in redesign.
+
+Hinweis zum Schema (wir räumen es in Schritt 2 sauber auf):
+
+    Pflicht: title, issue, year, series, cover (wenn möglich).
+
+    Optional & unterstützt: characters (Array oder String), event, dcui, page_count, format.
+
+Sag mir kurz „Schritt 1 fertig“ (oder wenn irgendwo was hakt), dann mache ich mit Schritt 2 (Loader-Code umstellen) weiter und poste dir die exakten Mini-Snippets.
+Du:
+wir starten das projekt von vorne. also kein neuer branch redesign nötig
+ChatGPT:
+
+super — wir starten frisch auf main und gehen Schritt für Schritt. Ich führe dich durch, ohne Branch-Wechsel, und gebe dir immer exakt die Mini-Änderungen.
+Überblick (neuer Anfang)
+
+    Ordner & Dateien anlegen
+
+    Mehrdatei-Loader aktivieren (kleine Code-Snippets in index.html)
+
+    Sichtprüfung (funktioniert Laden, Filter, Suche)
+
+    Design-Feinschliff (zusätzliche Tags wie format, page_count, „nur ungelesen“, etc.)
+
+    GitHub Pages (falls noch nicht aktiv)
+
+Schritt 1 — Ordner & Daten vorbereiten
+
+Ziel: Deine JSONs liegen zentral unter data/, plus eine Liste data/_list.json.
+
+    Im Repo (Branch main) einen Ordner data/ anlegen.
+
+    Alle deine Comic-JSONs dort hinein schieben, z. B.:
+
+        data/batman.json
+
+        data/detective_comics.json
+
+        data/legends_of_the_dark_knight.json
+
+    Datei data/_list.json neu anlegen mit den Pfaden (bitte genau so, relativ zur index.html):
+
+[
+  "data/batman.json",
+  "data/detective_comics.json",
+  "data/legends_of_the_dark_knight.json"
+]
+
+    Du kannst die Liste jederzeit erweitern/kürzen. Reihenfolge egal.
+
+Sag mir kurz, wenn das erledigt ist—dann machen wir mit Schritt 2 (Mini-Codeänderungen für den Mehrdatei-Loader) direkt weiter. Wenn du möchtest, poste die tatsächlichen Dateinamen, dann passe ich die Liste für dich exakt an.
+Du:
+kleinschrittiger für idioten
+ChatGPT:
+
+Alles klar 👍 wir gehen wirklich ganz klein vor.
+Wir fangen mit Schritt 1 an, und du machst es direkt in deinem GitHub-Repo:
+Schritt 1 – Ordner anlegen
+
+    Öffne dein Repo auf GitHub.
+
+    Klicke auf “Add file” → “Create new file”.
+
+    Tippe als Dateinamen data/.gitkeep ein.
+
+        (.gitkeep ist nur ein Platzhalter, damit Git den Ordner speichert.)
+
+    Committe die Datei.
+    👉 Jetzt gibt es den Ordner data/.
+
+Wenn das erledigt ist, sag mir kurz „fertig“.
+Dann kommt Schritt 2: Deine JSON-Dateien in diesen Ordner verschieben.
+Du:
+fertig
+ChatGPT:
+
+Sehr gut ✅
+Schritt 2 – JSON-Dateien in den neuen Ordner legen
+
+    Wieder im Repo → Add file → Upload files.
+
+    Wähle deine bisherigen JSON-Dateien (z. B. batman.json, detective_comics.json, …) aus deinem Rechner.
+
+    Lade sie in den Ordner data/ hoch.
+
+        Der Dateiname muss am Ende so aussehen: data/batman.json, data/detective_comics.json, usw.
+
+    Committen.
+
+Sag mir danach wieder „fertig“, dann machen wir Schritt 3: data/_list.json anlegen (dort listen wir alle JSONs auf).
+Du:
+fertig
+ChatGPT:
+
+Top 👌
+Schritt 3 – data/_list.json anlegen
+
+Jetzt brauchen wir eine kleine Liste, die alle deine JSON-Dateien enthält.
+
+    Klicke im Repo wieder auf Add file → Create new file.
+
+    Als Dateiname eingeben:
+
+data/_list.json
+
+Inhalt einfügen (Dateinamen anpassen, je nachdem was du hochgeladen hast):
+
+    [
+      "data/batman.json",
+      "data/detective_comics.json"
+    ]
+
+    👉 Falls du noch mehr JSONs hast, einfach in die Liste eintragen, jeweils mit Komma getrennt.
+
+    Committen.
+
+Sag mir bitte kurz, wenn du das erledigt hast → dann machen wir Schritt 4: Den Loader im index.html so umbauen, dass er mehrere JSON-Dateien lädt.
+Du:
+sollen die json in data sein?
+ChatGPT:
+
+Ja 👍 ganz genau:
+
+Alle deine Comic-Listen (also batman.json, detective_comics.json usw.) sollen im Ordner data/ liegen.
+So werden die Pfade kurz und einheitlich, und unser Loader kann sie über data/_list.json finden.
+
+Beispiel Struktur im Repo:
+
+index.html
+data/
+ ├─ batman.json
+ ├─ detective_comics.json
+ └─ _list.json
+
+Wenn du deine JSONs bisher woanders hattest (z. B. im Hauptordner), bitte rüber in data/ verschieben.
+
+👉 Hast du das schon so gemacht oder sollen wir die Dateien noch verschieben?
+Du:
+habe sie verschoben
+ChatGPT:
+
+Perfekt 👏 Dann sind wir bereit für den nächsten Schritt.
+Schritt 4 – index.html anpassen
+
+Im Moment lädt deine Seite nur eine Datei (comics.json).
+Wir ändern das so, dass sie alle Dateien aus data/_list.json lädt.
+Änderung im Code (index.html)
+
+Suche in deiner Datei nach diesem Block (ganz oben im <script>-Teil):
+
+// --- Config ---
+const DATA_URL = './comics.json'; // Passe an deinen Pfad an.
+
+➡️ Ersetze ihn durch:
+
+// --- Config ---
+// Datenquellen: entweder mehrere aus data/_list.json oder Fallback comics.json
+const DATA_LIST_URL = './data/_list.json';
+const DATA_FALLBACK_URL = './comics.json';
+
+Dann scrolle runter zu async function init(){ ... } (da wo fetch(DATA_URL drinsteht).
+Dort bitte den ganzen Inhalt dieser Funktion austauschen gegen:
+
+async function init(){
+  skeleton(16);
+  try {
+    const listRes = await fetch(DATA_LIST_URL, {cache:'no-store'});
+    if(listRes.ok){
+      const files = await listRes.json();
+      const arrays = await Promise.all(
+        (files||[]).map(p =>
+          fetch(String(p), {cache:'no-store'})
+            .then(r => r.ok ? r.json() : [])
+            .catch(()=>[])
+        )
+      );
+      state.raw = arrays.flat();
+    } else {
+      // Fallback: einzelne Datei
+      const res = await fetch(DATA_FALLBACK_URL, {cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data = await res.json();
+      state.raw = Array.isArray(data) ? data : (data.items || []);
+    }
+  } catch(err) {
+    console.error(err);
+    state.raw = [];
+  }
+  buildFilters();
+  apply();
+  bindUI();
+}
+
+👉 Mach diese zwei Änderungen in index.html und committe.
+Danach sollte die Seite alle JSONs laden, die du in data/_list.json eingetragen hast.
+
+Sag mir kurz wenn das erledigt ist, dann testen wir es gemeinsam.
+Du:
+ich habe doch noch gar keine seite. die wollten wir doch jetzt mit dem neuen hohen niveau machen
+ChatGPT:
+
+alles gut — dann wirklich ab null. winzige schritte. ich sag immer genau, was du klickst.
+schritt 1 — index.html anlegen
+
+ziel: die seite existiert (noch ohne daten).
+
+    öffne dein repo auf github.
+
+    Add file → Create new file.
+
+    dateiname: index.html
+
+    inhalt: nimm den kompletten code aus dem canvas rechts („Batman Guide – Modern Dark UI…“) und füge ihn hier ein.
+
+        der code ist schon „high level design“ (dunkel, grid, filter, read-tracking).
+
+        im code steht aktuell const DATA_URL = './comics.json'; — lassen wir so.
+
+    Commit changes.
+
+👉 sag „fertig“, dann machen wir sofort schritt 2 (eine mini-testdatei comics.json, damit du sofort was siehst).
+Du:
+index.html auch in data?
+ChatGPT:
+
+Nein 🙂
+Die index.html liegt immer im Hauptordner vom Repo (also ganz oben).
+Nur die Daten-Dateien (JSONs) kommen in den Ordner data/.
+
+So sieht die Struktur am Ende aus:
+
+index.html        ← deine Seite
+data/
+ ├─ batman.json   ← Comics
+ ├─ detective_comics.json
+ └─ _list.json
+
+👉 Lege also die index.html im Hauptordner an.
+
+Soll ich dir als nächstes eine kleine Beispiel-comics.json schreiben, damit du sofort was siehst, wenn du die Seite öffnest?
+
+
+ChatGPT kann Fehler machen. Überprüfe wichtige Informationen. Siehe Cookie-Voreinstellungen.
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Batman Comic Guide</title>
+  <style>
+    :root{
+      --bg:#0b0d12;            /* near-black */
+      --bg-soft:#11141b;       /* card background */
+      --ink:#e7ecf3;           /* primary text */
+      --muted:#9aa4b2;         /* secondary text */
+      --accent:#f1c40f;        /* bat-yellow */
+      --accent-2:#ffd761;      /* lighter yellow */
+      --outline:#1c2230;       /* borders */
+      --ok:#31c48d;
+      --danger:#f05252;
+    }
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1200px 800px at 10% -10%, #151822 0%, transparent 60%),
+        radial-gradient(1200px 800px at 110% -20%, #151822 0%, transparent 60%),
+        linear-gradient(180deg, #0a0c11 0%, #080a0f 100%);
+      color:var(--ink);
+      font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;
+      letter-spacing: .2px;
+    }
+    /* ---- Layout ---- */
+    .container{max-width:1200px; margin:0 auto; padding:24px;}
+    header{
+      position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8px);
+      background:linear-gradient(180deg, rgba(10,12,17,.9) 0%, rgba(10,12,17,.65) 100%);
+      border-bottom:1px solid var(--outline);
+    }
+    .head{display:flex; gap:16px; align-items:center; padding:14px 24px;}
+    .logo{width:44px; height:44px; display:grid; place-items:center; border-radius:12px;
+      background: radial-gradient(120% 140% at 30% 10%, #1b1f2a 0%, #0e1118 60%);
+      border:1px solid var(--outline); box-shadow: 0 10px 30px rgba(0,0,0,.25) inset;
+    }
+    .logo svg{width:28px; height:28px; fill:var(--accent)}
+    .title{font-size:20px; font-weight:700; letter-spacing:.4px}
+    .subtitle{color:var(--muted); font-size:13px}
+
+    .toolbar{display:grid; gap:10px; grid-template-columns: 1fr repeat(5, minmax(120px, 170px)); align-items:end; padding: 0 24px 16px;}
+    .toolbar .field{display:flex; flex-direction:column; gap:6px}
+    label{color:var(--muted); font-size:12px}
+    input[type="text"], select{
+      background:var(--bg-soft); color:var(--ink); border:1px solid var(--outline);
+      border-radius:12px; padding:10px 12px; outline:none;
+    }
+    input[type="text"]:focus, select:focus{border-color:#2b3346; box-shadow:0 0 0 3px rgba(241,196,15,.12)}
+
+    .stats{display:flex; gap:14px; align-items:center; flex-wrap:wrap; color:var(--muted); padding: 2px 24px 16px;}
+    .badge{display:inline-flex; gap:6px; align-items:center; background:#0f1320; border:1px solid var(--outline); padding:6px 10px; border-radius:999px; font-size:12px}
+    .bar{flex:1; height:10px; background:#0f1320; border:1px solid var(--outline); border-radius:999px; overflow:hidden}
+    .bar > i{display:block; height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2));}
+
+    main{padding: 8px 24px 40px;}
+    .grid{display:grid; gap:14px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));}
+
+    /* ---- Card ---- */
+    .card{position:relative; border:1px solid var(--outline); background:linear-gradient(180deg, #101521, #0d111a); border-radius:16px; overflow:hidden; transition:transform .15s ease, box-shadow .15s ease}
+    .card:hover{transform: translateY(-2px); box-shadow:0 10px 30px rgba(0,0,0,.35)}
+
+    .cover-wrap{aspect-ratio: 3/4.2; display:grid; place-items:center; background:#0c0f16; border-bottom:1px solid var(--outline)}
+    .cover{max-width:100%; max-height:100%; object-fit:contain; image-rendering:auto;}
+
+    .content{padding:10px 12px 12px; display:grid; gap:8px}
+    .h{font-weight:700; font-size:14px}
+    .meta{display:flex; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:12px}
+    .tag{border:1px solid var(--outline); padding:2px 8px; border-radius:999px;}
+
+index.html auch in data?
