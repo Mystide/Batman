@@ -1,20 +1,19 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta name="referrer" content="no-referrer">
   <meta charset="utf-8" />
   <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Batman Comic Guide</title>
   <style>
     :root{
-      --bg:#0b0d12;
-      --bg-soft:#11141b;
-      --ink:#e7ecf3;
-      --muted:#9aa4b2;
-      --accent:#f1c40f;
-      --accent-2:#ffd761;
-      --outline:#1c2230;
+      --bg:#0b0d12;            /* near-black */
+      --bg-soft:#11141b;       /* card background */
+      --ink:#e7ecf3;           /* primary text */
+      --muted:#9aa4b2;         /* secondary text */
+      --accent:#f1c40f;        /* bat-yellow */
+      --accent-2:#ffd761;      /* lighter yellow */
+      --outline:#1c2230;       /* borders */
       --ok:#31c48d;
       --danger:#f05252;
     }
@@ -29,6 +28,7 @@
       font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;
       letter-spacing: .2px;
     }
+    /* ---- Layout ---- */
     .container{max-width:1200px; margin:0 auto; padding:24px;}
     header{
       position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8px);
@@ -61,29 +61,46 @@
     main{padding: 8px 24px 40px;}
     .grid{display:grid; gap:14px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));}
 
+    /* ---- Card ---- */
     .card{position:relative; border:1px solid var(--outline); background:linear-gradient(180deg, #101521, #0d111a); border-radius:16px; overflow:hidden; transition:transform .15s ease, box-shadow .15s ease}
     .card:hover{transform: translateY(-2px); box-shadow:0 10px 30px rgba(0,0,0,.35)}
+
     .cover-wrap{aspect-ratio: 3/4.2; display:grid; place-items:center; background:#0c0f16; border-bottom:1px solid var(--outline)}
     .cover{max-width:100%; max-height:100%; object-fit:contain; image-rendering:auto;}
+
     .content{padding:10px 12px 12px; display:grid; gap:8px}
     .h{font-weight:700; font-size:14px}
     .meta{display:flex; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:12px}
     .tag{border:1px solid var(--outline); padding:2px 8px; border-radius:999px;}
+
+    /* Read toggle */
     .read-toggle{position:absolute; top:10px; right:10px; background:rgba(0,0,0,.45); border:1px solid var(--outline); border-radius:12px; padding:6px 8px; display:flex; gap:6px; align-items:center; font-size:12px; cursor:pointer; user-select:none}
     .read-toggle i{width:10px; height:10px; border-radius:999px; border:1px solid var(--outline); display:inline-block; background:#121722}
     .read-toggle.active i{background:var(--ok); border-color:rgba(0,0,0,.35)}
+
+    /* DCUI badge bottom-right */
     .dcui{position:absolute; bottom:8px; right:8px; font-size:10px; padding:4px 6px; border-radius:999px; background:rgba(0,0,0,.55); border:1px solid var(--outline)}
+
+    /* Skeleton */
     .skeleton{animation: shimmer 1.4s infinite linear; background: linear-gradient(90deg, rgba(255,255,255,0.07) 0, rgba(255,255,255,0.11) 40%, rgba(255,255,255,0.07) 80%); background-size:200% 100%;}
     @keyframes shimmer{ from{ background-position-x: 200% } to{ background-position-x: -200% } }
+
     .empty{padding:28px; text-align:center; color:var(--muted); border:1px dashed var(--outline); border-radius:16px}
+
+    /* Footer */
     footer{padding:24px; color:var(--muted); text-align:center; border-top:1px solid var(--outline)}
-    @media (max-width: 900px){ .toolbar{grid-template-columns: 1fr 1fr;} }
+
+    /* Small screens */
+    @media (max-width: 900px){
+      .toolbar{grid-template-columns: 1fr 1fr;}
+    }
   </style>
 </head>
 <body>
   <header>
     <div class="head container">
       <div class="logo" aria-hidden="true">
+        <!-- minimalist bat logo -->
         <svg viewBox="0 0 64 32" role="img" aria-label="Batman Logo">
           <path d="M32 4c-5 6-11-2-18 0 2 3 2 6 0 9-3-2-7-1-12 2 6 2 10 6 12 12 4-1 7-3 9-6 1 4 3 7 9 7s8-3 9-7c2 3 5 5 9 6 2-6 6-10 12-12-5-3-9-4-12-2-2-3-2-6 0-9-7-2-13 6-18 0z"/>
         </svg>
@@ -135,10 +152,14 @@
 
   <main class="container">
     <div id="grid" class="grid" aria-live="polite"></div>
-    <div id="empty" class="empty" hidden>Keine Treffer. Passe Suche/Filter an.</div>
+    <div id="empty" class="empty" hidden>
+      Keine Treffer. Passe Suche/Filter an.
+    </div>
   </main>
 
-  <footer>Made with ♥ for Gotham. Tipp: Drücke <kbd>/</kbd> für die Suche.</footer>
+  <footer>
+    Made with ♥ for Gotham. Tipp: Drücke <kbd>/</kbd> für die Suche.
+  </footer>
 
   <script>
     // --- Config ---
@@ -169,35 +190,30 @@
     init();
     async function init(){
       skeleton(16);
-      try {
-        // Mehrdatei-Setup
+      try{
         const listRes = await fetch(DATA_LIST_URL, {cache:'no-store'});
-        if (listRes.ok) {
+        if(listRes.ok){
           const files = await listRes.json();
           const arrays = await Promise.all(
-            (files || []).map(p =>
-              fetch(String(p), {cache:'no-store'})
-                .then(r => r.ok ? r.json() : [])
-                .catch(()=>[])
-            )
+            (files||[]).map(p=> fetch(String(p), {cache:'no-store'}).then(r=> r.ok?r.json():[]).catch(()=>[]))
           );
           state.raw = arrays.flat();
         } else {
-          // Fallback: einzelne Datei (comics.json)
+          // Fallback auf einzelne Datei
           const res = await fetch(DATA_FALLBACK_URL, {cache:'no-store'});
           if(!res.ok) throw new Error('HTTP '+res.status);
           const data = await res.json();
           state.raw = Array.isArray(data) ? data : (data.items || []);
         }
-      } catch(err) {
+      }catch(err){
         console.error(err);
         state.raw = [];
       }
-      // Dedupe by id
+      // Deduplizieren per id
       const seen = new Set();
       state.raw = state.raw.filter(x=>{
         const id = (x.id || `${x.series||''}#${x.issue||''}-${x.title||''}`).toLowerCase();
-        if (seen.has(id)) return false; seen.add(id); return true;
+        if(seen.has(id)) return false; seen.add(id); return true;
       });
 
       buildFilters();
@@ -287,6 +303,7 @@
         return true;
       });
 
+      // Sort
       const sort = el.sort.value;
       items.sort((a,b)=>{
         switch(sort){
@@ -320,15 +337,15 @@
             <i></i><span>${isRead? 'Gelesen':'Ungelesen'}</span>
           </button>
           <div class="cover-wrap">
-          
-          ${x.cover ? `<img class="cover"
-          alt="${escapeHtml(x.title)} Cover"
-          loading="lazy"
-          src="https://images.weserv.nl/?url=${encodeURIComponent(String(x.cover).replace(/^https?:\/\//,''))}"
-          referrerpolicy="no-referrer"
-          crossorigin="anonymous">`
-          : '<div class="cover skeleton" style="width:70%; height:70%"></div>'}
-          ${x.dcui ? `<a class="dcui" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener">DCUI</a>`:''}
+            ${x.cover ? `<img class="cover"
+                 alt="${escapeHtml(x.title)} Cover"
+                 loading="lazy"
+                 src="${escapeHtml(x.cover)}"
+                 referrerpolicy="no-referrer"
+                 crossorigin="anonymous"
+                 onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\\'cover skeleton\\' style=\\'width:70%; height:70%\\'></div>');">`
+              : '<div class="cover skeleton" style="width:70%; height:70%"></div>'}
+            ${x.dcui ? `<a class="dcui" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener">DCUI</a>`:''}
           </div>
           <div class="content">
             <div class="h" title="${escapeHtml(x.series)}">${escapeHtml(x.title)} <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small></div>
@@ -365,6 +382,7 @@
 
     function updateStats(){
       el.count.textContent = String(state.view.length);
+      // read count based on all or current view? We show global progress.
       const total = state.raw.length || 1;
       const read = [...state.readSet].filter(id => state.raw.some(item => (item.id||`${item.series||''}#${item.issue||''}-${item.title||''}`.toLowerCase().replace(/\s+/g,'_'))===id)).length;
       el.readCount.textContent = String(read);
@@ -376,19 +394,13 @@
     // --- Helpers ---
     function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
     function shortSeries(s){
+      // Turn "Batman (2016)" into "Batman ’16" for compact tag
       const m = /^(.*)\((\d{4})\)\s*$/.exec(s||'');
       return m ? `${m[1].trim()} ’${String(m[2]).slice(2)}` : s;
     }
     function fuzzyIncludes(hay, needle){
+      // simple word-wise includes
       return needle.split(/\s+/).every(tok => hay.includes(tok));
-    }
-
-    // Erzwingt https bei externen Bild-URLs, lässt lokale Pfade unverändert
-    function upgradeUrl(u){
-      if(!u) return '';
-      if(/^(\.?\/)?covers\//i.test(u)) return u;        // lokale Bilder unverändert
-      if(/^\/\//.test(u)) return 'https:' + u;          // schema-relativ -> https
-      return u.replace(/^http:\/\//i, 'https://');      // http -> https
     }
   </script>
 </body>
