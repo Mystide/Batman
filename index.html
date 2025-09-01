@@ -319,14 +319,15 @@
             <i></i><span>${isRead? 'Gelesen':'Ungelesen'}</span>
           </button>
           <div class="cover-wrap">
-            ${x.cover ? `<img class="cover"
-                 alt="${escapeHtml(x.title)} Cover"
-                 loading="lazy" decoding="async"
-                 src="${escapeHtml(upgradeUrl(x.cover))}"
-                 crossorigin="anonymous"
-                 onerror="this.onerror=null; this.src='${escapeHtml(upgradeUrl(x.cover)).replace(/^https:\/\//,'https://images.weserv.nl/?url=')}';">`
-              : '<div class="cover skeleton" style="width:70%; height:70%"></div>'}
-            ${x.dcui ? `<a class="dcui" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener">DCUI</a>`:''}
+          
+          ${x.cover ? `<img class="cover"
+          alt="${escapeHtml(x.title)} Cover"
+          loading="lazy"
+          src="https://images.weserv.nl/?url=${encodeURIComponent(String(x.cover).replace(/^https?:\/\//,''))}"
+          referrerpolicy="no-referrer"
+          crossorigin="anonymous">`
+          : '<div class="cover skeleton" style="width:70%; height:70%"></div>'}
+          ${x.dcui ? `<a class="dcui" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener">DCUI</a>`:''}
           </div>
           <div class="content">
             <div class="h" title="${escapeHtml(x.series)}">${escapeHtml(x.title)} <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small></div>
