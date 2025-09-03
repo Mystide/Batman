@@ -258,7 +258,7 @@
       [el.q, el.series, el.year, el.event, el.sort].forEach(c=> c.addEventListener('input', apply));
     }
 
-    // Helpers: cover + date
+    // Helpers: cover + date + series short
     function firstCover(covers){
       if(!covers) return '';
       if(typeof covers==='string') return covers;
@@ -276,18 +276,24 @@
       if(year) return new Date(Number(year),0,1).getTime();
       return 0;
     }
-    function formatDate(dateRaw, year){
+    function formatDateDE(dateRaw, year){
       if(dateRaw){
-        const m=/^(\d{4})(?:[-/.](\d{1,2})(?:[-/.](\d{1,2}))?)?$/.exec(String(dateRaw).trim());
+        const str=String(dateRaw).trim();
+        const m=/^(\d{4})(?:[-/.](\d{1,2})(?:[-/.](\d{1,2}))?)?$/.exec(str);
         if(m){
-          const y=m[1], mm=m[2]?String(m[2]).padStart(2,'0'):null, dd=m[3]?String(m[3]).padStart(2,'0'):null;
-          return dd? `${y}-${mm}-${dd}` : mm? `${y}-${mm}` : y;
+          const yy=+m[1], mm=+(m[2]||1), dd=+(m[3]||1);
+          const D=new Date(yy,mm-1,dd);
+          if(!isNaN(D)) return `${String(D.getDate()).padStart(2,'0')}.${String(D.getMonth()+1).padStart(2,'0')}.${D.getFullYear()}`;
         }
-        const d=new Date(dateRaw);
-        if(!isNaN(d)) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        const d2=new Date(str);
+        if(!isNaN(d2)) return `${String(d2.getDate()).padStart(2,'0')}.${String(d2.getMonth()+1).padStart(2,'0')}.${d2.getFullYear()}`;
       }
-      if(year) return String(year);
+      if(year) return `01.01.${String(year)}`;
       return '';
+    }
+    function shortSeries(s){
+      const m = /^(.*)\((\d{4})\)\s*$/.exec(String(s||'').trim());
+      return m ? `${m[1].trim()} ’${String(m[2]).slice(2)}` : (s||'');
     }
 
     // Normalize items
@@ -366,9 +372,8 @@
           <div class="content">
             <div class="h" title="${escapeHtml(x.series)}">${escapeHtml(x.title)} <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small></div>
             <div class="meta">
-              ${x.ts ? `<span class="tag" title="Datum">${escapeHtml(formatDate(x.date, x.year))}</span>` : ''}
-              <span class="tag" title="Serie">${escapeHtml(x.series)}</span>
-              ${x.year? `<span class="tag" title="Jahr">${x.year}</span>`:''}
+              ${x.ts ? `<span class="tag" title="Datum">${escapeHtml(formatDateDE(x.date, x.year))}</span>` : ''}
+              <span class="tag" title="Serie">${escapeHtml(shortSeries(x.series))}</span>
               ${x.event? `<span class="tag" title="Event/Storyline">${escapeHtml(x.event)}</span>`:''}
             </div>
           </div>`;
