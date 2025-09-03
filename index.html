@@ -28,7 +28,7 @@
     .logo svg{width:28px; height:28px; fill:var(--accent)}
     .title{font-size:20px; font-weight:700;}
     .subtitle{color:var(--muted); font-size:13px}
-    .toolbar{display:grid; gap:10px; grid-template-columns: 1fr repeat(5, minmax(120px, 170px)); align-items:end; padding: 0 24px 16px;}
+    .toolbar{display:grid; gap:10px; grid-template-columns: 1fr repeat(4, minmax(120px, 170px)); align-items:end; padding: 0 24px 16px;}
     .toolbar .field{display:flex; flex-direction:column; gap:6px}
     label{color:var(--muted); font-size:12px}
     input[type="text"], select{background:var(--bg-soft); color:var(--ink); border:1px solid var(--outline); border-radius:12px; padding:10px 12px; outline:none;}
@@ -69,13 +69,14 @@
       <div class="field"><label for="series">Serie</label><select id="series"><option value="">Alle</option></select></div>
       <div class="field"><label for="year">Jahr</label><select id="year"><option value="">Alle</option></select></div>
       <div class="field"><label for="event">Event</label><select id="event"><option value="">Alle</option></select></div>
-      <div class="field"><label for="sort">Sortierung</label><select id="sort">
-          <option value="yearAsc">Jahr ↑</option>
-          <option value="yearDesc">Jahr ↓</option>
-          <option value="issueAsc">Heftnummer ↑</option>
-          <option value="issueDesc">Heftnummer ↓</option>
+      <div class="field"><label for="sort">Sortierung</label>
+        <select id="sort">
+          <option value="dateAsc">Datum ↑</option>
+          <option value="dateDesc">Datum ↓</option>
           <option value="titleAsc">Titel A–Z</option>
-      </select></div>
+          <option value="titleDesc">Titel Z–A</option>
+        </select>
+      </div>
     </div>
     <div class="stats container">
       <span class="badge"><strong id="count">0</strong> Einträge</span>
@@ -91,260 +92,181 @@
   <footer>Made with ♥ for Gotham.</footer>
 
   <script>
-  // --- Config ---
-  const DATA_LIST_URL = './data/list.json';
-  const DATA_FALLBACK_URL = './comics.json';
+    const DATA_LIST_URL = './data/list.json';
+    const DATA_FALLBACK_URL = './comics.json';
+    const $ = sel => document.querySelector(sel);
 
-  const $ = sel => document.querySelector(sel);
+    const state = { raw:[], view:[], readSet:new Set(JSON.parse(localStorage.getItem('batman-read')||'[]')) };
+    const el = { grid:$('#grid'), empty:$('#empty'), q:$('#q'), series:$('#series'), year:$('#year'), event:$('#event'), sort:$('#sort'),
+                 count:$('#count'), readCount:$('#readCount'), progress:$('#progress') };
 
-  const state = {
-    raw: [],
-    view: [],
-    readSet: new Set(JSON.parse(localStorage.getItem('batman-read')||'[]'))
-  };
-
-  const el = {
-    grid: $('#grid'), empty: $('#empty'),
-    q: $('#q'), series: $('#series'), year: $('#year'), event: $('#event'), sort: $('#sort'),
-    count: $('#count'), readCount: $('#readCount'), progress: $('#progress')
-  };
-
-  // --- Init ---
-  init();
-  async function init(){
-    try{
-      const listRes = await fetch(DATA_LIST_URL, {cache:'no-store'});
-      if(listRes.ok){
-        const files = await listRes.json();
-        const arrays = await Promise.all((files||[]).map(async p=>{
-          try{
-            const r = await fetch(String(p), {cache:'no-store'});
-            if(!r.ok) return [];
-            const j = await r.json();
-            return Array.isArray(j) ? j : (j.items || []);
-          }catch{ return []; }
-        }));
-        state.raw = arrays.flat();
-      }else{
-        const res = await fetch(DATA_FALLBACK_URL, {cache:'no-store'});
-        if(res.ok){
-          const d = await res.json();
-          state.raw = Array.isArray(d) ? d : (d.items || []);
+    init();
+    async function init(){
+      try{
+        const listRes = await fetch(DATA_LIST_URL, {cache:'no-store'});
+        if(listRes.ok){
+          const files = await listRes.json();
+          const arrays = await Promise.all((files||[]).map(async p=>{
+            try{
+              const r = await fetch(String(p), {cache:'no-store'});
+              if(!r.ok) return [];
+              const j = await r.json();
+              return Array.isArray(j) ? j : (j.items || []);
+            }catch{ return []; }
+          }));
+          state.raw = arrays.flat();
+        }else{
+          const res = await fetch(DATA_FALLBACK_URL, {cache:'no-store'});
+          if(res.ok){
+            const d = await res.json();
+            state.raw = Array.isArray(d) ? d : (d.items || []);
+          }
         }
-      }
-    }catch(e){
-      console.error(e);
-      state.raw = [];
-    }
+      }catch(e){ console.error(e); state.raw = []; }
 
-    // Dedupe
-    const seen = new Set();
-    state.raw = state.raw.filter(x=>{
-      const id = (x.id || `${x.series||''}#${x.issue||''}-${x.title||''}`).toLowerCase();
-      if(seen.has(id)) return false; seen.add(id); return true;
-    });
-
-    buildFilters();
-    bindUI();
-    apply();
-  }
-
-  // --- Build filters ---
-  function buildFilters(){
-    const items = state.raw.map(normalize);
-    const bySeries = new Set(items.map(x=>x.series).filter(Boolean));
-    const byEvent  = new Set(items.map(x=>x.event).filter(Boolean));
-    const byYear   = new Set(items.map(x=>x.year).filter(Boolean));
-
-    fillSelect(el.series, ['Alle', ...[...bySeries].sort()]);
-    fillSelect(el.event,  ['Alle', ...[...byEvent].sort()]);
-    fillSelect(el.year,   ['Alle', ...[...byYear].sort((a,b)=>a-b).map(String)]);
-  }
-
-  function fillSelect(select, items){
-    const cur = select.value;
-    select.innerHTML = items.map((v,i)=>{
-      const val = i===0 ? '' : v;
-      const label = v;
-      return `<option value="${escapeHtml(val)}">${escapeHtml(label)}</option>`;
-    }).join('');
-    if([...(select.options)].some(o=>o.value===cur)) select.value = cur;
-  }
-
-  // --- UI bindings ---
-  function bindUI(){
-    window.addEventListener('keydown', (e)=>{ if(e.key==='/' && document.activeElement!==el.q){ e.preventDefault(); el.q.focus(); el.q.select(); } });
-    [el.q, el.series, el.year, el.event, el.sort].forEach(c=> c.addEventListener('input', apply));
-  }
-
-  // --- Normalize data ---
-  function firstCover(covers){
-    if(!covers) return '';
-    if(typeof covers === 'string') return covers;
-    if(Array.isArray(covers)){
-      const c0 = covers[0];
-      if(typeof c0 === 'string') return c0;
-      if(c0 && typeof c0 === 'object') return c0.url || c0.href || c0.src || '';
-      return '';
-    }
-    if(typeof covers === 'object'){
-      return covers.main || covers.cover || covers.url || covers.href || covers.src || '';
-    }
-    return '';
-  }
-
-  function parseDateToTS(s, year){
-    if(s){
-      const str = String(s).trim();
-      const d1 = new Date(str);
-      if(!isNaN(d1)) return d1.getTime();
-      const m = /^(\d{4})(?:[-/.](\d{1,2})(?:[-/.](\d{1,2}))?)?$/.exec(str);
-      if(m){
-        const yy = +m[1], mm = (+m[2]||1)-1, dd = +m[3]||1;
-        return new Date(yy, mm, dd).getTime();
-      }
-    }
-    if(year){ return new Date(Number(year), 0, 1).getTime(); }
-    return 0;
-  }
-
-  function normalize(item){
-    const id = item.id || `${(item.series||'')}#${(item.issue||'')}-${(item.title||'')}`.toLowerCase().replace(/\s+/g,'_');
-    const chars = Array.isArray(item.characters) ? item.characters.join(', ') : (item.characters || '');
-    const dateRaw =
-      item.date || item.release_date || item.released ||
-      item.published || item.publication_date || item.cover_date || '';
-    const ts = parseDateToTS(dateRaw, item.year);
-
-    return {
-      id,
-      title: item.title || 'Ohne Titel',
-      issue: item.issue ?? '',
-      year: Number(item.year) || '',
-      series: item.series || 'Batman',
-      cover: firstCover(item.covers) || item.cover || item.image || item.image_url || item.thumbnail || '',
-      characters: chars,
-      event: item.event || '',
-      dcui: item.dcui || item.dcui_link || '',
-      page_count: item.page_count ?? item.pages ?? '',
-      format: item.format || '',
-      date: dateRaw || '',
-      ts
-    };
-  }
-
-  // --- Apply filters + sort + render ---
-  function apply(){
-    const q = (el.q.value||'').trim().toLowerCase();
-    const fSeries = el.series.value;
-    const fYear = el.year.value;
-    const fEvent = el.event.value;
-
-    let items = state.raw.map(normalize).filter(x=>{
-      if(fSeries && x.series!==fSeries) return false;
-      if(fYear && String(x.year)!==String(fYear)) return false;
-      if(fEvent && x.event!==fEvent) return false;
-      if(q){
-        const hay = `${x.title} ${x.characters} ${x.event} ${x.series}`.toLowerCase();
-        if(!fuzzyIncludes(hay, q)) return false;
-      }
-      return true;
-    });
-
-    // Sortierung
-    const sort = el.sort.value;
-    items.sort((a,b)=>{
-      switch(sort){
-        case 'dateAsc':  return (a.ts||0) - (b.ts||0) || String(a.title).localeCompare(String(b.title));
-        case 'dateDesc': return (b.ts||0) - (a.ts||0) || String(a.title).localeCompare(String(b.title));
-        case 'titleAsc': return String(a.title).localeCompare(String(b.title));
-        case 'titleDesc':return String(b.title).localeCompare(String(a.title));
-        default: return 0;
-      }
-    });
-
-    state.view = items;
-    render();
-    el.count.textContent = String(items.length);
-    updateStats();
-  }
-
-  function render(){
-    el.grid.innerHTML='';
-    for(const x of state.view){
-      const card=document.createElement('article');
-      card.className='card';
-      const isRead = state.readSet.has(x.id);
-      card.innerHTML=`
-        <button class="read-toggle ${isRead?'active':''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}" title="Gelesen umschalten">
-          <i></i><span>${isRead? 'Gelesen':'Ungelesen'}</span>
-        </button>
-        <div class="cover-wrap">
-          ${x.cover
-            ? `<img class="cover"
-                   alt="${escapeHtml(x.title)} Cover"
-                   loading="lazy"
-                   src="${escapeHtml(x.cover)}"
-                   referrerpolicy="no-referrer"
-                   crossorigin="anonymous"
-                   onerror="this.style.outline='2px solid #f05252'; this.title='Bildfehler: '+this.src">`
-            : '<div class="cover skeleton" style="width:70%; height:70%"></div>'}
-          ${x.dcui ? `<a class="dcui" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener">DCUI</a>`:''}
-        </div>
-        <div class="content">
-          <div class="h" title="${escapeHtml(x.series)}">${escapeHtml(x.title)} <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small></div>
-          <div class="meta">
-            <span class="tag" title="Serie">${escapeHtml(x.series)}</span>
-            ${x.year? `<span class="tag" title="Jahr">${x.year}</span>`:''}
-            ${x.event? `<span class="tag" title="Event/Storyline">${escapeHtml(x.event)}</span>`:''}
-          </div>
-        </div>`;
-
-      // Gelesen-Button
-      const btn = card.querySelector('.read-toggle');
-      btn.addEventListener('click', (e)=>{
-        e.preventDefault(); e.stopPropagation();
-        toggleRead(x.id);
-        const active = state.readSet.has(x.id);
-        btn.classList.toggle('active', active);
-        btn.setAttribute('aria-pressed', active);
-        btn.querySelector('span').textContent = active ? 'Gelesen' : 'Ungelesen';
-        updateStats();
+      const seen = new Set();
+      state.raw = state.raw.filter(x=>{
+        const id = (x.id || `${x.series||''}#${x.issue||''}-${x.title||''}`).toLowerCase();
+        if(seen.has(id)) return false; seen.add(id); return true;
       });
 
-      el.grid.appendChild(card);
+      buildFilters();
+      bindUI();
+      apply();
     }
-    el.empty.hidden = state.view.length !== 0;
-  }
 
-  // --- Read-state ---
-  function toggleRead(id){
-    if(state.readSet.has(id)) state.readSet.delete(id);
-    else state.readSet.add(id);
-    persistRead();
-  }
-  function persistRead(){
-    localStorage.setItem('batman-read', JSON.stringify([...state.readSet]));
-  }
-  function updateStats(){
-    const total = state.raw.length || 1;
-    const rawIds = new Set(
-      state.raw.map(it => (it.id || `${it.series||''}#${it.issue||''}-${it.title||''}`).toLowerCase().replace(/\s+/g,'_'))
-    );
-    const read = [...state.readSet].filter(id => rawIds.has(id)).length;
+    function buildFilters(){
+      const items = state.raw.map(normalize);
+      const bySeries = new Set(items.map(x=>x.series).filter(Boolean));
+      const byEvent  = new Set(items.map(x=>x.event).filter(Boolean));
+      const byYear   = new Set(items.map(x=>x.year).filter(Boolean));
+      fillSelect(el.series, ['Alle', ...[...bySeries].sort()]);
+      fillSelect(el.event,  ['Alle', ...[...byEvent].sort()]);
+      fillSelect(el.year,   ['Alle', ...[...byYear].sort((a,b)=>a-b).map(String)]);
+    }
+    function fillSelect(select, items){
+      const cur = select.value;
+      select.innerHTML = items.map((v,i)=>{
+        const val = i===0 ? '' : v;
+        return `<option value="${escapeHtml(val)}">${escapeHtml(v)}</option>`;
+      }).join('');
+      if([...(select.options)].some(o=>o.value===cur)) select.value = cur;
+    }
+    function bindUI(){
+      window.addEventListener('keydown', (e)=>{ if(e.key==='/' && document.activeElement!==el.q){ e.preventDefault(); el.q.focus(); el.q.select(); } });
+      [el.q, el.series, el.year, el.event, el.sort].forEach(c=> c.addEventListener('input', apply));
+    }
 
-    el.readCount.textContent = String(read);
-    const pct = Math.min(100, Math.round((read/total)*100));
-    el.progress.style.width = pct + '%';
-    el.progress.title = pct + '% abgeschlossen';
-  }
+    function firstCover(covers){
+      if(!covers) return '';
+      if(typeof covers==='string') return covers;
+      if(Array.isArray(covers)){ const c0=covers[0]; return typeof c0==='string'?c0:(c0.url||c0.src||''); }
+      if(typeof covers==='object'){ return covers.main||covers.cover||covers.url||covers.src||''; }
+      return '';
+    }
+    function parseDateToTS(s, year){
+      if(s){ const d1=new Date(String(s).trim()); if(!isNaN(d1)) return d1.getTime();
+        const m=/^(\d{4})(?:[-/.](\d{1,2})(?:[-/.](\d{1,2}))?)?$/.exec(s);
+        if(m){ return new Date(+m[1], (+m[2]||1)-1, +m[3]||1).getTime(); }
+      }
+      if(year) return new Date(Number(year),0,1).getTime();
+      return 0;
+    }
+    function normalize(item){
+      const id = item.id || `${(item.series||'')}#${(item.issue||'')}-${(item.title||'')}`.toLowerCase().replace(/\s+/g,'_');
+      const chars = Array.isArray(item.characters)? item.characters.join(', '):(item.characters||'');
+      const dateRaw = item.date||item.release_date||item.released||item.published||item.publication_date||item.cover_date||'';
+      const ts = parseDateToTS(dateRaw, item.year);
+      return { id, title:item.title||'Ohne Titel', issue:item.issue??'', year:Number(item.year)||'',
+        series:item.series||'Batman', cover:firstCover(item.covers)||item.cover||item.image||item.image_url||item.thumbnail||'',
+        characters:chars, event:item.event||'', dcui:item.dcui||item.dcui_link||'', page_count:item.page_count??item.pages??'', format:item.format||'', date:dateRaw||'', ts };
+    }
 
-  // --- Helpers ---
-  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
-  function fuzzyIncludes(hay, needle){
-    return needle.split(/\s+/).every(tok => hay.includes(tok));
-  }
-</script>
+    function apply(){
+      const q=(el.q.value||'').trim().toLowerCase();
+      const fSeries=el.series.value, fYear=el.year.value, fEvent=el.event.value;
+      let items=state.raw.map(normalize).filter(x=>{
+        if(fSeries&&x.series!==fSeries) return false;
+        if(fYear&&String(x.year)!==String(fYear)) return false;
+        if(fEvent&&x.event!==fEvent) return false;
+        if(q){ const hay=`${x.title} ${x.characters} ${x.event} ${x.series}`.toLowerCase(); if(!fuzzyIncludes(hay,q)) return false; }
+        return true;
+      });
+      const sort=el.sort.value;
+      items.sort((a,b)=>{
+        switch(sort){
+          case 'dateAsc': return (a.ts||0)-(b.ts||0)||String(a.title).localeCompare(String(b.title));
+          case 'dateDesc':return (b.ts||0)-(a.ts||0)||String(a.title).localeCompare(String(b.title));
+          case 'titleAsc':return String(a.title).localeCompare(String(b.title));
+          case 'titleDesc':return String(b.title).localeCompare(String(a.title));
+          default: return 0;
+        }
+      });
+      state.view=items;
+      render();
+      el.count.textContent=String(items.length);
+      updateStats();
+    }
 
+    function render(){
+      el.grid.innerHTML='';
+      for(const x of state.view){
+        const card=document.createElement('article');
+        card.className='card';
+        const isRead=state.readSet.has(x.id);
+        card.innerHTML=`
+          <button class="read-toggle ${isRead?'active':''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}">
+            <i></i><span>${isRead? 'Gelesen':'Ungelesen'}</span>
+          </button>
+          <div class="cover-wrap">
+            ${x.cover? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" src="${escapeHtml(x.cover)}"
+              referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.style.outline='2px solid #f05252';">`
+              : '<div class="cover skeleton" style="width:70%; height:70%"></div>'}
+            ${x.dcui? `<a class="dcui" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener">DCUI</a>`:''}
+          </div>
+          <div class="content">
+            <div class="h">${escapeHtml(x.title)} <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small></div>
+            <div class="meta">
+              <span class="tag">${escapeHtml(x.series)}</span>
+              ${x.year? `<span class="tag">${x.year}</span>`:''}
+              ${x.event? `<span class="tag">${escapeHtml(x.event)}</span>`:''}
+            </div>
+          </div>`;
+        card.querySelector('.read-toggle').addEventListener('click',e=>{
+          e.preventDefault(); e.stopPropagation();
+          toggleRead(x.id);
+          const active=state.readSet.has(x.id);
+          const btn=e.currentTarget;
+          btn.classList.toggle('active',active);
+          btn.setAttribute('aria-pressed',active);
+          btn.querySelector('span').textContent=active?'Gelesen':'Ungelesen';
+          updateStats();
+        });
+        el.grid.appendChild(card);
+      }
+      el.empty.hidden=state.view.length!==0;
+    }
+
+    function toggleRead(id){
+      if(state.readSet.has(id)) state.readSet.delete(id);
+      else state.readSet.add(id);
+      persistRead();
+    }
+    function persistRead(){ localStorage.setItem('batman-read', JSON.stringify([...state.readSet])); }
+    function updateStats(){
+      const total = state.raw.length || 1;
+      const rawIds = new Set(
+        state.raw.map(it => (it.id || `${it.series||''}#${it.issue||''}-${it.title||''}`).toLowerCase().replace(/\s+/g,'_'))
+      );
+      const read = [...state.readSet].filter(id => rawIds.has(id)).length;
+      el.readCount.textContent = String(read);
+      const pct = Math.min(100, Math.round((read/total)*100));
+      el.progress.style.width = pct + '%';
+      el.progress.title = pct + '% abgeschlossen';
+    }
+
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+    function fuzzyIncludes(hay, needle){ return needle.split(/\s+/).every(tok => hay.includes(tok)); }
+  </script>
 </body>
 </html>
