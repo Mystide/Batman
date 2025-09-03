@@ -49,41 +49,61 @@
 
     main{padding: 8px 24px 40px;}
     .grid{display:grid; gap:14px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));}
+
     .card{position:relative; border:1px solid var(--outline); background:linear-gradient(180deg, #101521, #0d111a); border-radius:16px; overflow:hidden;}
-    .cover-wrap{aspect-ratio: 3/4.2; display:grid; place-items:center; background:#0c0f16; border-bottom:1px solid var(--outline)}
-    .cover{max-width:100%; max-height:100%; object-fit:contain;}
+
+    /* Cover mit Overlay für besseren Button-Kontrast */
+    .cover-wrap{
+      position: relative;
+      aspect-ratio: 3/4.2;
+      display:grid; place-items:center;
+      background:#0c0f16; border-bottom:1px solid var(--outline);
+      overflow:hidden;
+    }
+    .cover-wrap::after{
+      content:"";
+      position:absolute; inset:0;
+      background: radial-gradient(120% 80% at 50% 20%, rgba(0,0,0,.35) 0%, rgba(0,0,0,.2) 40%, rgba(0,0,0,.0) 70%),
+                  linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.12) 45%, rgba(0,0,0,0) 80%);
+      pointer-events:none;
+      z-index: 1;
+    }
+    .cover{max-width:100%; max-height:100%; object-fit:contain; position:relative; z-index:0;}
+
     .content{padding:10px 12px 12px; display:grid; gap:8px}
     .h{font-weight:700; font-size:14px}
     .meta{display:flex; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:12px}
     .tag{border:1px solid var(--outline); padding:2px 8px; border-radius:999px;}
-    .dcui{position:absolute; bottom:8px; right:8px; font-size:10px; padding:4px 6px; border-radius:999px; background:rgba(0,0,0,.55); border:1px solid var(--outline)}
-    .skeleton{animation: shimmer 1.4s infinite linear; background: linear-gradient(90deg, rgba(255,255,255,0.07) 0, rgba(255,255,255,0.11) 40%, rgba(255,255,255,0.07) 80%); background-size:200% 100%;}
-    @keyframes shimmer{ from{ background-position-x: 200% } to{ background-position-x: -200% } }
-    .empty{padding:28px; text-align:center; color:var(--muted); border:1px dashed var(--outline); border-radius:16px}
-    footer{padding:24px; color:var(--muted); text-align:center; border-top:1px solid var(--outline)}
 
-    /* Read toggle – klar sichtbar */
+    .dcui{position:absolute; bottom:8px; right:8px; font-size:10px; padding:4px 6px; border-radius:999px; background:rgba(0,0,0,.55); border:1px solid var(--outline); z-index:2}
+
+    /* Read toggle – hochkontrast, immer lesbar */
     .read-toggle{
-      position:absolute; top:10px; right:10px;
+      position:absolute; top:10px; right:10px; z-index:2;
       display:flex; gap:8px; align-items:center;
       padding:8px 10px; border-radius:12px;
-      font-size:12px; font-weight:600;
-      backdrop-filter: blur(3px);
-      transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease, color .12s ease;
-      background: rgba(241,196,15,.14);
+      font-size:12px; font-weight:700; letter-spacing:.2px;
+      background: rgba(0,0,0,.55);
       border:1px solid var(--accent-2);
       color: var(--accent-2);
+      box-shadow: 0 4px 18px rgba(0,0,0,.35);
+      backdrop-filter: blur(2px);
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease, color .12s ease;
     }
     .read-toggle i{
       width:12px; height:12px; border-radius:999px; border:1px solid var(--outline); background:transparent;
     }
-    .read-toggle:hover{ box-shadow: 0 0 0 3px rgba(241,196,15,.12) inset; transform: translateY(-1px); }
+    .read-toggle:hover{ transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,.45); }
     .read-toggle.active{
-      background: rgba(49,196,141,.2);
       border-color: var(--ok);
       color: #d9ffef;
     }
     .read-toggle.active i{ background: var(--ok); border-color: rgba(0,0,0,.35); }
+
+    .skeleton{animation: shimmer 1.4s infinite linear; background: linear-gradient(90deg, rgba(255,255,255,0.07) 0, rgba(255,255,255,0.11) 40%, rgba(255,255,255,0.07) 80%); background-size:200% 100%;}
+    @keyframes shimmer{ from{ background-position-x: 200% } to{ background-position-x: -200% } }
+    .empty{padding:28px; text-align:center; color:var(--muted); border:1px dashed var(--outline); border-radius:16px}
+    footer{padding:24px; color:var(--muted); text-align:center; border-top:1px solid var(--outline)}
 
     /* Small screens */
     @media (max-width: 900px){
@@ -256,6 +276,19 @@
       if(year) return new Date(Number(year),0,1).getTime();
       return 0;
     }
+    function formatDate(dateRaw, year){
+      if(dateRaw){
+        const m=/^(\d{4})(?:[-/.](\d{1,2})(?:[-/.](\d{1,2}))?)?$/.exec(String(dateRaw).trim());
+        if(m){
+          const y=m[1], mm=m[2]?String(m[2]).padStart(2,'0'):null, dd=m[3]?String(m[3]).padStart(2,'0'):null;
+          return dd? `${y}-${mm}-${dd}` : mm? `${y}-${mm}` : y;
+        }
+        const d=new Date(dateRaw);
+        if(!isNaN(d)) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      }
+      if(year) return String(year);
+      return '';
+    }
 
     // Normalize items
     function normalize(item){
@@ -333,6 +366,7 @@
           <div class="content">
             <div class="h" title="${escapeHtml(x.series)}">${escapeHtml(x.title)} <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small></div>
             <div class="meta">
+              ${x.ts ? `<span class="tag" title="Datum">${escapeHtml(formatDate(x.date, x.year))}</span>` : ''}
               <span class="tag" title="Serie">${escapeHtml(x.series)}</span>
               ${x.year? `<span class="tag" title="Jahr">${x.year}</span>`:''}
               ${x.event? `<span class="tag" title="Event/Storyline">${escapeHtml(x.event)}</span>`:''}
