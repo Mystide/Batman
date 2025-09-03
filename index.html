@@ -144,9 +144,9 @@
       if(seen.has(id)) return false; seen.add(id); return true;
     });
 
-    buildFilters();   // <-- Dropdowns befüllen
-    bindUI();         // <-- Events für Suche/Filter/Sort
-    apply();          // <-- initiale Ansicht
+    buildFilters();
+    bindUI();
+    apply();
   }
 
   // --- Build filters ---
@@ -173,7 +173,6 @@
 
   // --- UI bindings ---
   function bindUI(){
-    // Suche mit '/' fokussieren
     window.addEventListener('keydown', (e)=>{ if(e.key==='/' && document.activeElement!==el.q){ e.preventDefault(); el.q.focus(); el.q.select(); } });
     [el.q, el.series, el.year, el.event, el.sort].forEach(c=> c.addEventListener('input', apply));
   }
@@ -194,9 +193,29 @@
     return '';
   }
 
+  function parseDateToTS(s, year){
+    if(s){
+      const str = String(s).trim();
+      const d1 = new Date(str);
+      if(!isNaN(d1)) return d1.getTime();
+      const m = /^(\d{4})(?:[-/.](\d{1,2})(?:[-/.](\d{1,2}))?)?$/.exec(str);
+      if(m){
+        const yy = +m[1], mm = (+m[2]||1)-1, dd = +m[3]||1;
+        return new Date(yy, mm, dd).getTime();
+      }
+    }
+    if(year){ return new Date(Number(year), 0, 1).getTime(); }
+    return 0;
+  }
+
   function normalize(item){
     const id = item.id || `${(item.series||'')}#${(item.issue||'')}-${(item.title||'')}`.toLowerCase().replace(/\s+/g,'_');
     const chars = Array.isArray(item.characters) ? item.characters.join(', ') : (item.characters || '');
+    const dateRaw =
+      item.date || item.release_date || item.released ||
+      item.published || item.publication_date || item.cover_date || '';
+    const ts = parseDateToTS(dateRaw, item.year);
+
     return {
       id,
       title: item.title || 'Ohne Titel',
@@ -208,7 +227,9 @@
       event: item.event || '',
       dcui: item.dcui || item.dcui_link || '',
       page_count: item.page_count ?? item.pages ?? '',
-      format: item.format || ''
+      format: item.format || '',
+      date: dateRaw || '',
+      ts
     };
   }
 
@@ -234,11 +255,10 @@
     const sort = el.sort.value;
     items.sort((a,b)=>{
       switch(sort){
-        case 'yearAsc':  return (a.year||0)-(b.year||0) || cmpIssue(a.issue,b.issue);
-        case 'yearDesc': return (b.year||0)-(a.year||0) || cmpIssue(a.issue,b.issue);
-        case 'issueAsc': return cmpIssue(a.issue,b.issue);
-        case 'issueDesc':return -cmpIssue(a.issue,b.issue);
+        case 'dateAsc':  return (a.ts||0) - (b.ts||0) || String(a.title).localeCompare(String(b.title));
+        case 'dateDesc': return (b.ts||0) - (a.ts||0) || String(a.title).localeCompare(String(b.title));
         case 'titleAsc': return String(a.title).localeCompare(String(b.title));
+        case 'titleDesc':return String(b.title).localeCompare(String(a.title));
         default: return 0;
       }
     });
@@ -247,11 +267,6 @@
     render();
     el.count.textContent = String(items.length);
     updateStats();
-  }
-
-  function cmpIssue(a,b){
-    const pa = parseFloat(a)||0, pb = parseFloat(b)||0;
-    return pa===pb ? String(a).localeCompare(String(b)) : pa-pb;
   }
 
   function render(){
@@ -285,7 +300,7 @@
           </div>
         </div>`;
 
-      // Gelesen-Button verdrahten
+      // Gelesen-Button
       const btn = card.querySelector('.read-toggle');
       btn.addEventListener('click', (e)=>{
         e.preventDefault(); e.stopPropagation();
@@ -330,5 +345,6 @@
     return needle.split(/\s+/).every(tok => hay.includes(tok));
   }
 </script>
+
 </body>
 </html>
