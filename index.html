@@ -7,15 +7,8 @@
   <title>Batman Comic Guide</title>
   <style>
     :root{
-      --bg:#0b0d12;
-      --bg-soft:#11141b;
-      --ink:#e7ecf3;
-      --muted:#9aa4b2;
-      --accent:#f1c40f;
-      --accent-2:#ffd761;
-      --outline:#1c2230;
-      --ok:#31c48d;
-      --danger:#f05252;
+      --bg:#0b0d12; --bg-soft:#11141b; --ink:#e7ecf3; --muted:#9aa4b2;
+      --accent:#f1c40f; --accent-2:#ffd761; --outline:#1c2230; --ok:#31c48d; --danger:#f05252;
     }
     html,body{height:100%}
     body{
@@ -28,54 +21,36 @@
       font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;
     }
     .container{max-width:1200px; margin:0 auto; padding:24px;}
-    header{
-      position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8px);
-      background:linear-gradient(180deg, rgba(10,12,17,.9) 0%, rgba(10,12,17,.65) 100%);
-      border-bottom:1px solid var(--outline);
-    }
+    header{position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8px);
+      background:linear-gradient(180deg, rgba(10,12,17,.9) 0%, rgba(10,12,17,.65) 100%); border-bottom:1px solid var(--outline);}
     .head{display:flex; gap:16px; align-items:center; padding:14px 24px;}
-    .logo{width:44px; height:44px; display:grid; place-items:center; border-radius:12px;
-      background: radial-gradient(120% 140% at 30% 10%, #1b1f2a 0%, #0e1118 60%);
-      border:1px solid var(--outline);
-    }
+    .logo{width:44px; height:44px; display:grid; place-items:center; border-radius:12px; background: radial-gradient(120% 140% at 30% 10%, #1b1f2a 0%, #0e1118 60%); border:1px solid var(--outline);}
     .logo svg{width:28px; height:28px; fill:var(--accent)}
     .title{font-size:20px; font-weight:700;}
     .subtitle{color:var(--muted); font-size:13px}
-
     .toolbar{display:grid; gap:10px; grid-template-columns: 1fr repeat(5, minmax(120px, 170px)); align-items:end; padding: 0 24px 16px;}
     .toolbar .field{display:flex; flex-direction:column; gap:6px}
     label{color:var(--muted); font-size:12px}
-    input[type="text"], select{
-      background:var(--bg-soft); color:var(--ink); border:1px solid var(--outline);
-      border-radius:12px; padding:10px 12px; outline:none;
-    }
-
+    input[type="text"], select{background:var(--bg-soft); color:var(--ink); border:1px solid var(--outline); border-radius:12px; padding:10px 12px; outline:none;}
     .stats{display:flex; gap:14px; align-items:center; flex-wrap:wrap; color:var(--muted); padding: 2px 24px 16px;}
     .badge{display:inline-flex; gap:6px; align-items:center; background:#0f1320; border:1px solid var(--outline); padding:6px 10px; border-radius:999px; font-size:12px}
     .bar{flex:1; height:10px; background:#0f1320; border:1px solid var(--outline); border-radius:999px; overflow:hidden}
     .bar > i{display:block; height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2));}
-
     main{padding: 8px 24px 40px;}
     .grid{display:grid; gap:14px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));}
-
     .card{position:relative; border:1px solid var(--outline); background:linear-gradient(180deg, #101521, #0d111a); border-radius:16px; overflow:hidden;}
     .cover-wrap{aspect-ratio: 3/4.2; display:grid; place-items:center; background:#0c0f16; border-bottom:1px solid var(--outline)}
     .cover{max-width:100%; max-height:100%; object-fit:contain;}
-
     .content{padding:10px 12px 12px; display:grid; gap:8px}
     .h{font-weight:700; font-size:14px}
     .meta{display:flex; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:12px}
     .tag{border:1px solid var(--outline); padding:2px 8px; border-radius:999px;}
-
     .read-toggle{position:absolute; top:10px; right:10px; background:rgba(0,0,0,.45); border:1px solid var(--outline); border-radius:12px; padding:6px 8px; display:flex; gap:6px; align-items:center; font-size:12px; cursor:pointer}
     .read-toggle i{width:10px; height:10px; border-radius:999px; border:1px solid var(--outline); background:#121722}
     .read-toggle.active i{background:var(--ok); border-color:rgba(0,0,0,.35)}
-
     .dcui{position:absolute; bottom:8px; right:8px; font-size:10px; padding:4px 6px; border-radius:999px; background:rgba(0,0,0,.55); border:1px solid var(--outline)}
-
     .skeleton{animation: shimmer 1.4s infinite linear; background: linear-gradient(90deg, rgba(255,255,255,0.07) 0, rgba(255,255,255,0.11) 40%, rgba(255,255,255,0.07) 80%); background-size:200% 100%;}
     @keyframes shimmer{ from{ background-position-x: 200% } to{ background-position-x: -200% } }
-
     .empty{padding:28px; text-align:center; color:var(--muted); border:1px dashed var(--outline); border-radius:16px}
     footer{padding:24px; color:var(--muted); text-align:center; border-top:1px solid var(--outline)}
   </style>
@@ -118,58 +93,98 @@
   <script>
     const DATA_LIST_URL = './data/list.json';
     const DATA_FALLBACK_URL = './comics.json';
+
     const $ = sel => document.querySelector(sel);
     const state = { raw:[], view:[], readSet:new Set(JSON.parse(localStorage.getItem('batman-read')||'[]')) };
-    const el = { grid:$('#grid'), empty:$('#empty'), q:$('#q'), series:$('#series'), year:$('#year'), event:$('#event'), sort:$('#sort'), count:$('#count'), readCount:$('#readCount'), progress:$('#progress') };
+    const el = { grid:$('#grid'), empty:$('#empty'), q:$('#q'), series:$('#series'), year:$('#year'), event:$('#event'), sort:$('#sort'),
+                 count:$('#count'), readCount:$('#readCount'), progress:$('#progress') };
 
     init();
+
     async function init(){
       try{
-        const listRes = await fetch(DATA_LIST_URL);
+        // Mehrdatei: jede Datei robust laden, Fehler EINZELN abfangen
+        const listRes = await fetch(DATA_LIST_URL, {cache:'no-store'});
         if(listRes.ok){
           const files = await listRes.json();
-          const arrays = await Promise.all(files.map(p=> fetch(p).then(r=>r.ok?r.json():[])));
+          const arrays = await Promise.all((files||[]).map(async p=>{
+            try{
+              const r = await fetch(String(p), {cache:'no-store'});
+              if(!r.ok){ console.warn('Skip file (HTTP)', p, r.status); return []; }
+              const j = await r.json();
+              return Array.isArray(j) ? j : (j.items || []);
+            }catch(err){
+              console.warn('Skip file (error)', p, err);
+              return [];
+            }
+          }));
           state.raw = arrays.flat();
         }else{
-          const res = await fetch(DATA_FALLBACK_URL);
-          if(res.ok){ state.raw = await res.json(); }
+          // Fallback: einzelne Datei
+          const res = await fetch(DATA_FALLBACK_URL, {cache:'no-store'});
+          if(res.ok){
+            const d = await res.json();
+            state.raw = Array.isArray(d) ? d : (d.items || []);
+          }else{
+            console.error('Fallback HTTP', res.status);
+          }
         }
-      }catch(e){ console.error(e); }
+      }catch(e){
+        console.error('init error', e);
+        state.raw = [];
+      }
+
+      // Dedupe (optional)
+      const seen = new Set();
+      state.raw = state.raw.filter(x=>{
+        const id = (x.id || `${x.series||''}#${x.issue||''}-${x.title||''}`).toLowerCase();
+        if(seen.has(id)) return false; seen.add(id); return true;
+      });
+
       apply();
     }
 
+    // ---- Normalisierung ----
+    function firstCover(covers){
+      if(!covers) return '';
+      if(typeof covers === 'string') return covers;
+      if(Array.isArray(covers)){
+        const c0 = covers[0];
+        if(typeof c0 === 'string') return c0;
+        if(c0 && typeof c0 === 'object') return c0.url || c0.href || c0.src || '';
+        return '';
+      }
+      if(typeof covers === 'object'){
+        return covers.main || covers.cover || covers.url || covers.href || covers.src || '';
+      }
+      return '';
+    }
+
     function normalize(item){
-  const id =
-    item.id ||
-    `${(item.series||'') }#${(item.issue||'') }-${(item.title||'')}`
-      .toLowerCase()
-      .replace(/\s+/g,'_');
+      const id = item.id || `${(item.series||'')}#${(item.issue||'')}-${(item.title||'')}`.toLowerCase().replace(/\s+/g,'_');
+      const chars = Array.isArray(item.characters) ? item.characters.join(', ') : (item.characters || '');
+      return {
+        id,
+        title: item.title || 'Ohne Titel',
+        issue: item.issue ?? '',
+        year: Number(item.year) || '',
+        series: item.series || 'Batman',
+        cover: firstCover(item.covers) || item.cover || item.image || item.image_url || item.thumbnail || '',
+        characters: chars,
+        event: item.event || '',
+        dcui: item.dcui || item.dcui_link || '',
+        page_count: item.page_count ?? item.pages ?? '',
+        format: item.format || ''
+      };
+    }
 
-  const chars = Array.isArray(item.characters)
-    ? item.characters.join(', ')
-    : (item.characters || '');
-
-  return {
-    id,
-    title: item.title || 'Ohne Titel',
-    issue: item.issue ?? '',
-    year: Number(item.year) || '',
-    series: item.series || 'Batman',
-    cover: item.covers || '',   // ← wichtig: Plural!
-    characters: chars,
-    event: item.event || '',
-    dcui: item.dcui || item.dcui_link || '',
-    page_count: item.page_count ?? item.pages ?? '',
-    format: item.format || ''
-  };
-}
-
-
+    // ---- Render-Pipeline ----
     function apply(){
-      let items = state.raw.map(normalize);
+      const items = state.raw.map(normalize);
       state.view = items;
       render();
-      el.count.textContent = items.length;
+      el.count.textContent = String(items.length);
+      console.log('Geladene Items:', items.length, '| ohne Cover:', items.filter(x=>!x.cover).length);
     }
 
     function render(){
@@ -179,26 +194,32 @@
         card.className='card';
         card.innerHTML=`
           <div class="cover-wrap">
-            ${x.cover ? `<img class="cover"
-     alt="${escapeHtml(x.title)} Cover"
-     src="${escapeHtml(x.cover)}"
-     referrerpolicy="no-referrer"
-     crossorigin="anonymous"
-     onerror="this.style.outline='2px solid red'; this.title='Fehler: '+this.src">`
-  : '<div class="cover skeleton" style="width:70%; height:70%"></div>'}
+            ${x.cover
+              ? `<img class="cover"
+                     alt="${escapeHtml(x.title)} Cover"
+                     loading="lazy"
+                     src="${escapeHtml(x.cover)}"
+                     referrerpolicy="no-referrer"
+                     crossorigin="anonymous"
+                     onerror="this.style.outline='2px solid #f05252'; this.title='Bildfehler: '+this.src">`
+              : '<div class="cover skeleton" style="width:70%; height:70%"></div>'}
+            ${x.dcui ? `<a class="dcui" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener">DCUI</a>`:''}
           </div>
           <div class="content">
-            <div class="h">${x.title} <small>#${x.issue}</small></div>
+            <div class="h" title="${escapeHtml(x.series)}">${escapeHtml(x.title)} <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small></div>
             <div class="meta">
-              <span class="tag">${x.series}</span>
-              ${x.year? `<span class="tag">${x.year}</span>`:''}
-              ${x.event? `<span class="tag">${x.event}</span>`:''}
+              <span class="tag" title="Serie">${escapeHtml(x.series)}</span>
+              ${x.year? `<span class="tag" title="Jahr">${x.year}</span>`:''}
+              ${x.event? `<span class="tag" title="Event/Storyline">${escapeHtml(x.event)}</span>`:''}
             </div>
           </div>`;
         el.grid.appendChild(card);
       }
-      el.empty.hidden=state.view.length!==0;
+      el.empty.hidden = state.view.length !== 0;
     }
+
+    // ---- Helper ----
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
   </script>
 </body>
 </html>
