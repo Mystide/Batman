@@ -100,7 +100,7 @@
     }
     .read-toggle.active i{ background: var(--ok); border-color: rgba(0,0,0,.35); }
 
-    .skeleton{animation: shimmer 1.4s infinite linear; background: linear-gradient(90deg, rgba(255,255,255,0.07) 0, rgba(255,255,255,0.11) 40%, rgba(255,255,255,0.07) 80%); background-size:200% 100%;}
+    .skeleton{animation: shimmer 1.4s infinite linear; background: linear-gradient(90deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.11) 40%, rgba(255,255,255,0.07) 80%); background-size:200% 100%;}
     @keyframes shimmer{ from{ background-position-x: 200% } to{ background-position-x: -200% } }
     .empty{padding:28px; text-align:center; color:var(--muted); border:1px dashed var(--outline); border-radius:16px}
     footer{padding:24px; color:var(--muted); text-align:center; border-top:1px solid var(--outline)}
@@ -174,9 +174,19 @@
   </footer>
 
   <script>
-    // --- Config ---
+    // --- Konfiguration ---
+    // Mehrdatei-Loader: data/list.json enthält ein Array relativer Pfade (z. B. ["data/batman.json","data/detective.json", ...])
     const DATA_LIST_URL = './data/list.json';
+    // Fallback: eine einzelne Datei (falls du alles in einer JSON hast)
     const DATA_FALLBACK_URL = './comics.json';
+
+    // Demo-Daten: werden NUR verwendet, wenn nach dem Laden keine Items vorhanden sind
+    const DEMO_DATA = [
+      {id:"hush-608", title:"Hush, Teil 1", issue:"608", year:2002, date:"2002-10-01", series:"Batman (2002)", event:"Hush", characters:["Batman","Catwoman","Riddler","Joker"], cover:"https://upload.wikimedia.org/wikipedia/en/9/9f/Batman_Hush_cover.jpg"},
+      {id:"new52-1", title:"The Court of Owls", issue:"1", year:2011, date:"2011-09-21", series:"Batman (2011)", event:"Court of Owls", characters:["Batman","Nightwing","Court of Owls"], cover:"https://upload.wikimedia.org/wikipedia/en/1/1c/Batman_Vol_2_1.png"},
+      {id:"killing-joke", title:"The Killing Joke", issue:"One-Shot", year:1988, date:"1988-03-29", series:"One-Shot (1988)", event:"The Killing Joke", characters:["Batman","Joker","Barbara Gordon"], cover:"https://upload.wikimedia.org/wikipedia/en/9/9b/Batman_the_killing_joke.jpg"},
+      {id:"year-one-404", title:"Year One, Part 1", issue:"404", year:1987, date:"1987-02-01", series:"Batman (1987)", event:"Year One", characters:["Batman","Catwoman","James Gordon"], cover:"https://upload.wikimedia.org/wikipedia/en/3/3d/Batman_404.png"}
+    ];
 
     const $ = sel => document.querySelector(sel);
 
@@ -196,43 +206,59 @@
     init();
     async function init(){
       try{
-        const listRes = await fetch(DATA_LIST_URL, {cache:'no-store'});
-        if(listRes.ok){
-          const files = await listRes.json();
-          const arrays = await Promise.all((files||[]).map(async p=>{
-            try{
-              const r = await fetch(String(p), {cache:'no-store'});
-              if(!r.ok) return [];
-              const j = await r.json();
-              return Array.isArray(j) ? j : (j.items || []);
-            }catch{ return []; }
-          }));
+        // 1) Versuche Liste mehrerer Dateien zu laden
+        const listRes = await safeFetchJson(DATA_LIST_URL);
+        if(listRes.ok && Array.isArray(listRes.data)){
+          const arrays = await Promise.all(
+            listRes.data.map(async p=>{
+              const r = await safeFetchJson(String(p));
+              return (r.ok && (Array.isArray(r.data) || r.data?.items)) ? (Array.isArray(r.data)? r.data : r.data.items) : [];
+            })
+          );
           state.raw = arrays.flat();
-        }else{
-          const res = await fetch(DATA_FALLBACK_URL, {cache:'no-store'});
-          if(res.ok){
-            const d = await res.json();
-            state.raw = Array.isArray(d) ? d : (d.items || []);
+        }
+
+        // 2) Fallback: einzelne Datei
+        if(!state.raw.length){
+          const one = await safeFetchJson(DATA_FALLBACK_URL);
+          if(one.ok){
+            state.raw = Array.isArray(one.data) ? one.data : (one.data?.items || []);
           }
         }
       }catch(e){
         console.error(e);
-        state.raw = [];
       }
 
-      // Dedupe
+      // 3) Deduplizieren
       const seen = new Set();
       state.raw = state.raw.filter(x=>{
-        const id = (x.id || `${x.series||''}#${x.issue||''}-${x.title||''}`).toLowerCase();
+        const id = (x?.id || `${x?.series||''}#${x?.issue||''}-${x?.title||''}`).toLowerCase();
         if(seen.has(id)) return false; seen.add(id); return true;
       });
+
+      // 4) Letzter Fallback: Demo-Daten (wenn nichts geladen wurde)
+      if(!state.raw.length){
+        state.raw = DEMO_DATA.slice();
+      }
 
       buildFilters();
       bindUI();
       apply();
     }
 
-    // Build filter dropdowns
+    // Sicherer Fetch → vermeidet harte Fehler bei CORS/404/Parsing
+    async function safeFetchJson(url){
+      try{
+        const r = await fetch(url, {cache:'no-store'});
+        if(!r.ok) return {ok:false, data:null};
+        const data = await r.json();
+        return {ok:true, data};
+      }catch{
+        return {ok:false, data:null};
+      }
+    }
+
+    // Filter-Dropdowns
     function buildFilters(){
       const items = state.raw.map(normalize);
       const bySeries = new Set(items.map(x=>x.series).filter(Boolean));
@@ -251,7 +277,7 @@
       if([...(select.options)].some(o=>o.value===cur)) select.value = cur;
     }
 
-    // UI bindings
+    // UI
     function bindUI(){
       // '/' fokussiert Suche
       window.addEventListener('keydown', (e)=>{ if(e.key==='/' && document.activeElement!==el.q){ e.preventDefault(); el.q.focus(); el.q.select(); } });
@@ -296,7 +322,7 @@
       return m ? `${m[1].trim()} ’${String(m[2]).slice(2)}` : (s||'');
     }
 
-    // Normalize items
+    // Normalize
     function normalize(item){
       const id = item.id || `${(item.series||'')}#${(item.issue||'')}-${(item.title||'')}`.toLowerCase().replace(/\s+/g,'_');
       const chars = Array.isArray(item.characters)? item.characters.join(', '):(item.characters||'');
@@ -330,7 +356,7 @@
         if(fEvent && x.event!==fEvent) return false;
         if(q){
           const hay = `${x.title} ${x.characters} ${x.event} ${x.series}`.toLowerCase();
-          if(!fuzzyIncludes(hay, q)) return false;
+          if(!q.split(/\s+/).every(tok => hay.includes(tok))) return false;
         }
         return true;
       });
@@ -378,7 +404,6 @@
             </div>
           </div>`;
 
-        // Read toggle
         const btn = card.querySelector('.read-toggle');
         btn.addEventListener('click', (e)=>{
           e.preventDefault(); e.stopPropagation();
@@ -418,7 +443,6 @@
 
     // Misc helpers
     function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
-    function fuzzyIncludes(hay, needle){ return needle.split(/\s+/).every(tok => hay.includes(tok)); }
   </script>
 </body>
 </html>
