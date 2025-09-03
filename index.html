@@ -11,6 +11,7 @@
     body{margin:0; background:linear-gradient(180deg, #0a0c11 0%, #080a0f 100%); color:var(--ink); font:15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;}
     .no-scroll{overflow:hidden}
     .container{max-width:1200px; margin:0 auto; padding:24px;}
+
     header{position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8px); background:linear-gradient(180deg, rgba(10,12,17,.9) 0%, rgba(10,12,17,.65) 100%); border-bottom:1px solid var(--outline);}
     .head{display:flex; justify-content:space-between; padding:14px 24px; align-items:center}
     .brand{display:flex; align-items:center; gap:12px}
@@ -18,27 +19,44 @@
     .logo svg{width:28px; height:28px; fill:var(--accent)}
     .title{font-size:20px; font-weight:700}
     .subtitle{color:var(--muted); font-size:13px}
+
     .icon-btn{display:inline-grid; place-items:center; width:38px; height:38px; border-radius:10px; border:1px solid var(--outline); background:#0f1320; color:var(--ink); cursor:pointer}
+    .icon-btn:hover{border-color:#2b3346}
+
+    /* Drawer */
     .drawer{position:fixed; inset:0; display:none; z-index:10000}
     .drawer.open{display:block}
     .drawer .shade{position:absolute; inset:0; background:#000; opacity:0; pointer-events:none; transition:opacity .25s ease}
-    .drawer.open .shade{opacity:.5; pointer-events:auto}
+    .drawer.open .shade{opacity:.55; pointer-events:auto}
     .drawer .panel{position:absolute; right:0; top:0; bottom:0; width:92%; max-width:420px; background:rgba(11,15,24,0.9); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); border-left:1px solid var(--outline); padding:18px; overflow:auto; box-shadow:-10px 0 30px rgba(0,0,0,.45); transform:translateX(100%); transition:transform .25s ease}
     .drawer.open .panel{transform:translateX(0)}
+    .drawer h3{margin:0 0 12px 0; font-size:16px}
+    .drawer .grid{display:grid; gap:12px}
+    .field label{color:var(--muted); font-size:12px; display:block; margin-bottom:6px}
+    .field input,.field select{background:var(--bg-soft); color:var(--ink); border:1px solid var(--outline); border-radius:12px; padding:10px 12px; outline:none; width:100%}
+    .drawer-actions{display:flex; gap:8px}
+    .ghost-btn{background:#0f1320; color:var(--ink); border:1px solid var(--outline); border-radius:10px; padding:10px 12px; cursor:pointer; font-size:13px}
+    .ghost-btn.danger{color:#ffd1d1; border-color:#5b2a2a; background:#1a0f0f}
+
     .stats{display:flex; gap:14px; align-items:center; flex-wrap:wrap; color:var(--muted); padding:2px 24px 16px}
     .badge{display:inline-flex; gap:6px; align-items:center; background:#0f1320; border:1px solid var(--outline); padding:6px 10px; border-radius:999px; font-size:12px}
     .bar{flex:1; height:10px; background:#0f1320; border:1px solid var(--outline); border-radius:999px; overflow:hidden}
     .bar>i{display:block; height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2))}
+
     main{padding:8px 24px 40px}
     .grid{display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+
     .card{position:relative; border:1px solid var(--outline); background:#101521; border-radius:16px; overflow:hidden}
-    .cover-wrap{aspect-ratio:3/4.2; display:grid; place-items:center; background:#0c0f16; border-bottom:1px solid var(--outline)}
-    .cover{max-width:100%; max-height:100%; object-fit:contain}
+    .cover-wrap{position:relative; aspect-ratio:3/4.2; display:grid; place-items:center; background:#0c0f16; border-bottom:1px solid var(--outline)}
+    .cover-wrap::after{content:""; position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.12) 50%, rgba(0,0,0,0) 80%); pointer-events:none; z-index:1}
+    .cover{max-width:100%; max-height:100%; object-fit:contain; position:relative; z-index:0}
+
     .content{padding:10px 12px 12px; display:grid; gap:8px}
     .h{font-weight:700; font-size:14px}
     .meta{display:flex; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:12px}
     .tag{border:1px solid var(--outline); padding:2px 8px; border-radius:999px}
-    .read-toggle{position:absolute; top:10px; right:10px; z-index:2; padding:6px 10px; border-radius:12px; font-size:12px; font-weight:700; background:rgba(0,0,0,.55); border:1px solid var(--accent-2); color:var(--accent-2)}
+
+    .read-toggle{position:absolute; top:10px; right:10px; z-index:2; padding:6px 10px; border-radius:12px; font-size:12px; font-weight:700; background:rgba(0,0,0,.6); border:1px solid var(--accent-2); color:var(--accent-2)}
     .read-toggle.active{border-color:var(--ok); color:#d9ffef}
   </style>
 </head>
@@ -49,27 +67,31 @@
         <div class="logo"><svg viewBox="0 0 64 32"><path d="M32 4c-5 6-11-2-18 0 2 3 2 6 0 9-3-2-7-1-12 2 6 2 10 6 12 12 4-1 7-3 9-6 1 4 3 7 9 7s8-3 9-7c2 3 5 5 9 6 2-6 6-10 12-12-5-3-9-4-12-2-2-3-2-6 0-9-7-2-13 6-18 0z"/></svg></div>
         <div><div class="title">Batman Comic Guide</div><div class="subtitle">Dark, clean & schnell – mit Suche, Filtern & Fortschritt</div></div>
       </div>
-      <button id="openFilters" class="icon-btn">☰</button>
+      <button id="openFilters" class="icon-btn" title="Filter & Sortierung">☰</button>
     </div>
   </header>
 
   <div id="drawer" class="drawer" aria-hidden="true">
     <div class="shade" id="closeDrawer"></div>
-    <aside class="panel">
+    <aside class="panel" role="dialog" aria-modal="true">
       <h3>Suche & Filter</h3>
       <div class="grid">
-        <input id="mq" type="text" placeholder="Suche..." />
-        <select id="mseries"><option value="">Alle Serien</option></select>
-        <select id="myear"><option value="">Alle Jahre</option></select>
-        <select id="mevent"><option value="">Alle Events</option></select>
-        <select id="msort">
-          <option value="dateAsc">Datum ↑</option>
-          <option value="dateDesc">Datum ↓</option>
-          <option value="titleAsc">Titel A–Z</option>
-          <option value="titleDesc">Titel Z–A</option>
-        </select>
-        <button id="mResetFilters">Reset</button>
-        <button id="closeDrawerBtn">Fertig</button>
+        <div class="field"><label for="mq">Suche</label><input id="mq" type="text" placeholder="z.B. Hush, Joker…"></div>
+        <div class="field"><label for="mseries">Serie</label><select id="mseries"><option value="">Alle Serien</option></select></div>
+        <div class="field"><label for="myear">Jahr</label><select id="myear"><option value="">Alle Jahre</option></select></div>
+        <div class="field"><label for="mevent">Event</label><select id="mevent"><option value="">Alle Events</option></select></div>
+        <div class="field"><label for="msort">Sortierung</label>
+          <select id="msort">
+            <option value="dateAsc">Datum ↑</option>
+            <option value="dateDesc">Datum ↓</option>
+            <option value="titleAsc">Titel A–Z</option>
+            <option value="titleDesc">Titel Z–A</option>
+          </select>
+        </div>
+        <div class="drawer-actions">
+          <button id="mResetFilters" class="ghost-btn danger" style="flex:1">Reset</button>
+          <button id="closeDrawerBtn" class="ghost-btn" style="flex:1">Fertig</button>
+        </div>
       </div>
     </aside>
   </div>
@@ -92,6 +114,17 @@
     const state = { raw: [], view: [], readSet:new Set(JSON.parse(localStorage.getItem('batman-read')||'[]')) };
     const el = { grid:$('#grid'), empty:$('#empty'), mq:$('#mq'), mseries:$('#mseries'), myear:$('#myear'), mevent:$('#mevent'), msort:$('#msort'), count:$('#count'), readCount:$('#readCount'), progress:$('#progress'), openFilters:$('#openFilters'), drawer:$('#drawer'), closeDrawer:$('#closeDrawer'), closeDrawerBtn:$('#closeDrawerBtn'), mResetFilters:$('#mResetFilters') };
 
+    const DEMO_DATA = [
+      {id:"batman_year_one", title:"Batman: Year One", issue:"404", year:1987, series:"Batman (1987)", cover:"https://upload.wikimedia.org/wikipedia/en/3/3d/Batman_404.png", event:"Year One", date:"1987-02-01"},
+      {id:"killing_joke", title:"The Killing Joke", issue:"One-Shot", year:1988, series:"One-Shot (1988)", cover:"https://upload.wikimedia.org/wikipedia/en/9/9b/Batman_the_killing_joke.jpg", event:"Killing Joke", date:"1988-03-29"},
+      {id:"hush_608", title:"Hush, Teil 1", issue:"608", year:2002, series:"Batman (2002)", cover:"https://upload.wikimedia.org/wikipedia/en/9/9f/Batman_Hush_cover.jpg", event:"Hush", date:"2002-10-01"},
+      {id:"owls_1", title:"The Court of Owls", issue:"1", year:2011, series:"Batman (2011)", cover:"https://upload.wikimedia.org/wikipedia/en/1/1c/Batman_Vol_2_1.png", event:"Court of Owls", date:"2011-09-21"},
+      {id:"dark_knight_returns_1", title:"The Dark Knight Returns #1", issue:"1", year:1986, series:"DKR (1986)", cover:"https://upload.wikimedia.org/wikipedia/en/9/9d/Dark_Knight_Returns_1.png", event:"DKR", date:"1986-02-01"},
+      {id:"long_halloween_1", title:"The Long Halloween #1", issue:"1", year:1996, series:"Long Halloween (1996)", cover:"https://upload.wikimedia.org/wikipedia/en/3/3d/Batman_the_long_halloween.jpg", event:"Long Halloween", date:"1996-12-01"},
+      {id:"death_in_family_426", title:"A Death in the Family #426", issue:"426", year:1988, series:"Batman (1988)", cover:"https://upload.wikimedia.org/wikipedia/en/0/0e/Batman426.jpg", event:"Death in the Family", date:"1988-08-01"},
+      {id:"white_knight_1", title:"Batman: White Knight #1", issue:"1", year:2017, series:"White Knight (2017)", cover:"https://upload.wikimedia.org/wikipedia/en/6/6c/Batman_White_Knight_1.png", event:"White Knight", date:"2017-10-04"}
+    ];
+
     init();
     async function init(){
       let loaded = false;
@@ -105,10 +138,7 @@
               files.map(p=> fetch(String(p), {cache:'no-store'}).then(r=> r.ok?r.json():[]).catch(()=>[]))
             );
             const merged = arrays.flat();
-            if(merged && merged.length){
-              state.raw = merged;
-              loaded = true;
-            }
+            if(merged && merged.length){ state.raw = merged; loaded = true; }
           }
         }
       }catch(e){ console.warn('Liste konnte nicht geladen werden', e); }
@@ -124,10 +154,9 @@
         }catch(e){ console.warn('Fallback konnte nicht geladen werden', e); }
       }
 
-      if(!loaded){
-        state.raw = [{id:'demo1',title:'Demo Comic',issue:'1',year:2020,series:'Demo',cover:'',event:'',date:'2020-01-01'}];
-      }
+      if(!loaded){ state.raw = DEMO_DATA.slice(); }
 
+      // Deduplizieren
       const seen = new Set();
       state.raw = state.raw.filter(x=>{
         const id = (x.id || `${x.series||''}#${x.issue||''}-${x.title||''}`).toLowerCase();
@@ -146,31 +175,43 @@
       const byYear=new Set(items.map(x=>x.year).filter(Boolean));
       fillSelect(el.mseries,['Alle Serien',...bySeries]);
       fillSelect(el.mevent,['Alle Events',...byEvent]);
-      fillSelect(el.myear,['Alle Jahre',...byYear]);
+      fillSelect(el.myear,['Alle Jahre',...Array.from(byYear).sort((a,b)=>a-b)]);
     }
-    function fillSelect(sel,items){sel.innerHTML=items.map((v,i)=>`<option value="${i? v:''}">${v}</option>`).join('');}
+    function fillSelect(sel,items){ sel.innerHTML=items.map((v,i)=>`<option value="${i? v:''}">${v}</option>`).join(''); }
 
     function bindUI(){
-      if(el.openFilters) el.openFilters.addEventListener('click',()=>drawer(true));
-      if(el.closeDrawer) el.closeDrawer.addEventListener('click',()=>drawer(false));
-      if(el.closeDrawerBtn) el.closeDrawerBtn.addEventListener('click',()=>drawer(false));
-      if(el.mResetFilters) el.mResetFilters.addEventListener('click',()=>{el.mseries.value='';el.myear.value='';el.mevent.value='';el.msort.value='dateAsc';apply();});
+      el.openFilters?.addEventListener('click',()=>drawer(true));
+      el.closeDrawer?.addEventListener('click',()=>drawer(false));
+      el.closeDrawerBtn?.addEventListener('click',()=>drawer(false));
+      window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') drawer(false); });
+      el.mResetFilters?.addEventListener('click',()=>{el.mseries.value='';el.myear.value='';el.mevent.value='';el.msort.value='dateAsc';apply();});
       [el.mq,el.mseries,el.myear,el.mevent,el.msort].forEach(c=>c&&c.addEventListener('input',apply));
     }
     function drawer(open){ el.drawer.classList.toggle('open',open); document.body.classList.toggle('no-scroll',open); }
 
     function normalize(item){
-      const id=item.id||`${item.series}#${item.issue}-${item.title}`;
-      const ts=item.date? new Date(item.date).getTime():0;
-      return {...item,id,ts};
+      const id=(item.id||`${item.series||''}#${item.issue||''}-${item.title||''}`).toLowerCase().replace(/\s+/g,'_');
+      const ts=item.date? new Date(item.date).getTime(): (item.year? new Date(Number(item.year),0,1).getTime():0);
+      return { ...item, id, ts };
     }
 
+    function formatDateDE(dateRaw, year){ if(dateRaw){ const d=new Date(dateRaw); if(!isNaN(d)) return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; } if(year) return `01.01.${String(year)}`; return ''; }
+    function shortSeries(s){ const m=/^(.*)\((\d{4})\)\s*$/.exec(String(s||'').trim()); return m ? `${m[1].trim()} ’${String(m[2]).slice(2)}` : (s||''); }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+
     function apply(){
-      const q=(el.mq.value||'').toLowerCase();
-      let items=state.raw.map(normalize).filter(x=>!q||x.title.toLowerCase().includes(q));
+      const q=(el.mq.value||'').toLowerCase().trim();
+      const fSeries=el.mseries.value; const fYear=el.myear.value; const fEvent=el.mevent.value;
+      let items=state.raw.map(normalize).filter(x=>{
+        if(fSeries && x.series!==fSeries) return false;
+        if(fYear && String(x.year)!==String(fYear)) return false;
+        if(fEvent && x.event!==fEvent) return false;
+        if(q){ const hay=`${x.title} ${x.series} ${x.event}`.toLowerCase(); if(!q.split(/\s+/).every(tok=>hay.includes(tok))) return false; }
+        return true;
+      });
       switch(el.msort.value){
-        case'dateAsc':items.sort((a,b)=>a.ts-b.ts);break;
-        case'dateDesc':items.sort((a,b)=>b.ts-a.ts);break;
+        case'dateAsc':items.sort((a,b)=>a.ts-b.ts||a.title.localeCompare(b.title));break;
+        case'dateDesc':items.sort((a,b)=>b.ts-a.ts||a.title.localeCompare(b.title));break;
         case'titleAsc':items.sort((a,b)=>a.title.localeCompare(b.title));break;
         case'titleDesc':items.sort((a,b)=>b.title.localeCompare(a.title));break;
       }
@@ -180,15 +221,38 @@
     function render(){
       el.grid.innerHTML='';
       state.view.forEach(x=>{
+        const isRead = state.readSet.has(x.id);
         const card=document.createElement('article');
         card.className='card';
-        card.innerHTML=`<button class="read-toggle">${state.readSet.has(x.id)?'Gelesen':'Ungelesen'}</button><div class="cover-wrap">${x.cover?`<img class="cover" src="${x.cover}">`:''}</div><div class="content"><div class="h">${x.title}</div></div>`;
-        card.querySelector('.read-toggle').addEventListener('click',()=>{if(state.readSet.has(x.id))state.readSet.delete(x.id);else state.readSet.add(x.id);localStorage.setItem('batman-read',JSON.stringify([...state.readSet]));render();});
+        card.innerHTML=`
+          <button class="read-toggle ${isRead?'active':''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}">${isRead?'Gelesen':'Ungelesen'}</button>
+          <div class="cover-wrap">
+            ${x.cover?`<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.style.display='none'">`:''}
+          </div>
+          <div class="content">
+            <div class="h">${escapeHtml(x.title)}${x.issue?` <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small>`:''}</div>
+            <div class="meta">
+              ${x.date?`<span class="tag">${formatDateDE(x.date,x.year)}</span>`:(x.year?`<span class="tag">01.01.${x.year}</span>`:'')}
+              ${x.series?`<span class="tag">${escapeHtml(shortSeries(x.series))}</span>`:''}
+              ${x.event?`<span class="tag">${escapeHtml(x.event)}</span>`:''}
+            </div>
+          </div>`;
+        card.querySelector('.read-toggle').addEventListener('click',()=>{
+          if(state.readSet.has(x.id)) state.readSet.delete(x.id); else state.readSet.add(x.id);
+          localStorage.setItem('batman-read', JSON.stringify([...state.readSet]));
+          render();
+        });
         el.grid.appendChild(card);
       });
       el.empty.hidden=state.view.length>0;
       el.count.textContent=state.view.length;
-      el.readCount.textContent=[...state.readSet].length;
+      const rawIds = new Set(state.raw.map(it => (it.id || `${it.series||''}#${it.issue||''}-${it.title||''}`).toLowerCase().replace(/\s+/g,'_')));
+      const read = [...state.readSet].filter(id => rawIds.has(id)).length;
+      el.readCount.textContent = String(read);
+      const total = state.raw.length || 1;
+      const pct = Math.min(100, Math.round((read/total)*100));
+      el.progress.style.width = pct + '%';
+      el.progress.title = pct + '% abgeschlossen';
     }
   </script>
 </body>
