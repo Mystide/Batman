@@ -89,13 +89,11 @@
     const DATA_FALLBACK_URL = './comics.json';
     const $ = sel => document.querySelector(sel);
 
-    const DATA_LIST_URL = './data/list.json';
-    const DATA_FALLBACK_URL = './comics.json';
     const state = { raw: [], view: [], readSet:new Set(JSON.parse(localStorage.getItem('batman-read')||'[]')) };
     const el = { grid:$('#grid'), empty:$('#empty'), mq:$('#mq'), mseries:$('#mseries'), myear:$('#myear'), mevent:$('#mevent'), msort:$('#msort'), count:$('#count'), readCount:$('#readCount'), progress:$('#progress'), openFilters:$('#openFilters'), drawer:$('#drawer'), closeDrawer:$('#closeDrawer'), closeDrawerBtn:$('#closeDrawerBtn'), mResetFilters:$('#mResetFilters') };
 
     init();
-    async async function init(){
+    async function init(){
       let loaded = false;
       state.raw = [];
       try{
@@ -127,10 +125,9 @@
       }
 
       if(!loaded){
-        state.raw = DEMO_DATA.slice();
+        state.raw = [{id:'demo1',title:'Demo Comic',issue:'1',year:2020,series:'Demo',cover:'',event:'',date:'2020-01-01'}];
       }
 
-      // Deduplizieren per id
       const seen = new Set();
       state.raw = state.raw.filter(x=>{
         const id = (x.id || `${x.series||''}#${x.issue||''}-${x.title||''}`).toLowerCase();
@@ -140,13 +137,6 @@
       buildFilters();
       bindUI();
       apply();
-    } else {
-          const res = await fetch(DATA_FALLBACK_URL);
-          if(res.ok){ const data = await res.json(); state.raw = Array.isArray(data)? data:(data.items||[]);} else { state.raw=[]; }
-        }
-      }catch(e){ console.error(e); state.raw=[]; }
-      if(state.raw.length===0){ state.raw = [{id:'demo1',title:'Demo Comic',issue:'1',year:2020,series:'Demo',cover:'',event:'',date:'2020-01-01'}]; }
-      buildFilters(); bindUI(); apply();
     }
 
     function buildFilters(){
