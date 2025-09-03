@@ -28,14 +28,25 @@
     .logo svg{width:28px; height:28px; fill:var(--accent)}
     .title{font-size:20px; font-weight:700;}
     .subtitle{color:var(--muted); font-size:13px}
-    .toolbar{display:grid; gap:10px; grid-template-columns: 1fr repeat(4, minmax(120px, 170px)); align-items:end; padding: 0 24px 16px;}
+
+    /* Toolbar: 6 Spalten (1fr + 5 Felder); Suche spannt 2 Spalten */
+    .toolbar{
+      display:grid; gap:10px;
+      grid-template-columns: 1fr repeat(5, minmax(120px, 170px));
+      align-items:end; padding: 0 24px 16px;
+    }
     .toolbar .field{display:flex; flex-direction:column; gap:6px}
     label{color:var(--muted); font-size:12px}
-    input[type="text"], select{background:var(--bg-soft); color:var(--ink); border:1px solid var(--outline); border-radius:12px; padding:10px 12px; outline:none;}
+    input[type="text"], select{
+      background:var(--bg-soft); color:var(--ink); border:1px solid var(--outline);
+      border-radius:12px; padding:10px 12px; outline:none;
+    }
+
     .stats{display:flex; gap:14px; align-items:center; flex-wrap:wrap; color:var(--muted); padding: 2px 24px 16px;}
     .badge{display:inline-flex; gap:6px; align-items:center; background:#0f1320; border:1px solid var(--outline); padding:6px 10px; border-radius:999px; font-size:12px}
     .bar{flex:1; height:10px; background:#0f1320; border:1px solid var(--outline); border-radius:999px; overflow:hidden}
     .bar > i{display:block; height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2));}
+
     main{padding: 8px 24px 40px;}
     .grid{display:grid; gap:14px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));}
     .card{position:relative; border:1px solid var(--outline); background:linear-gradient(180deg, #101521, #0d111a); border-radius:16px; overflow:hidden;}
@@ -45,31 +56,78 @@
     .h{font-weight:700; font-size:14px}
     .meta{display:flex; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:12px}
     .tag{border:1px solid var(--outline); padding:2px 8px; border-radius:999px;}
-    .read-toggle{position:absolute; top:10px; right:10px; background:rgba(0,0,0,.45); border:1px solid var(--outline); border-radius:12px; padding:6px 8px; display:flex; gap:6px; align-items:center; font-size:12px; cursor:pointer}
-    .read-toggle i{width:10px; height:10px; border-radius:999px; border:1px solid var(--outline); background:#121722}
-    .read-toggle.active i{background:var(--ok); border-color:rgba(0,0,0,.35)}
     .dcui{position:absolute; bottom:8px; right:8px; font-size:10px; padding:4px 6px; border-radius:999px; background:rgba(0,0,0,.55); border:1px solid var(--outline)}
     .skeleton{animation: shimmer 1.4s infinite linear; background: linear-gradient(90deg, rgba(255,255,255,0.07) 0, rgba(255,255,255,0.11) 40%, rgba(255,255,255,0.07) 80%); background-size:200% 100%;}
     @keyframes shimmer{ from{ background-position-x: 200% } to{ background-position-x: -200% } }
     .empty{padding:28px; text-align:center; color:var(--muted); border:1px dashed var(--outline); border-radius:16px}
     footer{padding:24px; color:var(--muted); text-align:center; border-top:1px solid var(--outline)}
+
+    /* Read toggle – klar sichtbar */
+    .read-toggle{
+      position:absolute; top:10px; right:10px;
+      display:flex; gap:8px; align-items:center;
+      padding:8px 10px; border-radius:12px;
+      font-size:12px; font-weight:600;
+      backdrop-filter: blur(3px);
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease, color .12s ease;
+      background: rgba(241,196,15,.14);
+      border:1px solid var(--accent-2);
+      color: var(--accent-2);
+    }
+    .read-toggle i{
+      width:12px; height:12px; border-radius:999px; border:1px solid var(--outline); background:transparent;
+    }
+    .read-toggle:hover{ box-shadow: 0 0 0 3px rgba(241,196,15,.12) inset; transform: translateY(-1px); }
+    .read-toggle.active{
+      background: rgba(49,196,141,.2);
+      border-color: var(--ok);
+      color: #d9ffef;
+    }
+    .read-toggle.active i{ background: var(--ok); border-color: rgba(0,0,0,.35); }
+
+    /* Small screens */
+    @media (max-width: 900px){
+      .toolbar{grid-template-columns: 1fr 1fr;}
+    }
+    @media (max-width: 520px){
+      .read-toggle{ padding:10px 12px; font-size:13px; }
+      .read-toggle i{ width:13px; height:13px; }
+    }
   </style>
 </head>
 <body>
   <header>
     <div class="head container">
-      <div class="logo"><svg viewBox="0 0 64 32"><path d="M32 4c-5 6-11-2-18 0 2 3 2 6 0 9-3-2-7-1-12 2 6 2 10 6 12 12 4-1 7-3 9-6 1 4 3 7 9 7s8-3 9-7c2 3 5 5 9 6 2-6 6-10 12-12-5-3-9-4-12-2-2-3-2-6 0-9-7-2-13 6-18 0z"/></svg></div>
-      <div><div class="title">Batman Comic Guide</div><div class="subtitle">Dark, clean & schnell – mit Suche, Filtern & Fortschritt</div></div>
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 64 32" role="img" aria-label="Batman Logo">
+          <path d="M32 4c-5 6-11-2-18 0 2 3 2 6 0 9-3-2-7-1-12 2 6 2 10 6 12 12 4-1 7-3 9-6 1 4 3 7 9 7s8-3 9-7c2 3 5 5 9 6 2-6 6-10 12-12-5-3-9-4-12-2-2-3-2-6 0-9-7-2-13 6-18 0z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="title">Batman Comic Guide</div>
+        <div class="subtitle">Dark, clean & schnell – mit Suche, Filtern & Fortschritt</div>
+      </div>
     </div>
-    <div class="toolbar container">
+
+    <div class="toolbar container" role="region" aria-label="Filter und Suche">
       <div class="field" style="grid-column: span 2;">
         <label for="q">Suche</label>
-        <input id="q" type="text" placeholder="z.B. Hush, Joker…" />
+        <input id="q" type="text" placeholder="z.B. Hush, Joker…" autocomplete="off" />
       </div>
-      <div class="field"><label for="series">Serie</label><select id="series"><option value="">Alle</option></select></div>
-      <div class="field"><label for="year">Jahr</label><select id="year"><option value="">Alle</option></select></div>
-      <div class="field"><label for="event">Event</label><select id="event"><option value="">Alle</option></select></div>
-      <div class="field"><label for="sort">Sortierung</label>
+      <div class="field">
+        <label for="series">Serie</label>
+        <select id="series"><option value="">Alle</option></select>
+      </div>
+      <div class="field">
+        <label for="year">Jahr</label>
+        <select id="year"><option value="">Alle</option></select>
+      </div>
+      <div class="field">
+        <label for="event">Event</label>
+        <select id="event"><option value="">Alle</option></select>
+      </div>
+      <div class="field">
+        <label for="sort">Sortierung</label>
         <select id="sort">
           <option value="dateAsc">Datum ↑</option>
           <option value="dateDesc">Datum ↓</option>
@@ -78,28 +136,43 @@
         </select>
       </div>
     </div>
+
     <div class="stats container">
       <span class="badge"><strong id="count">0</strong> Einträge</span>
       <span class="badge">Gelesen: <strong id="readCount">0</strong></span>
-      <div class="bar"><i id="progress"></i></div>
+      <div class="bar" aria-hidden="true"><i id="progress"></i></div>
     </div>
   </header>
 
   <main class="container">
-    <div id="grid" class="grid"></div>
+    <div id="grid" class="grid" aria-live="polite"></div>
     <div id="empty" class="empty" hidden>Keine Treffer.</div>
   </main>
-  <footer>Made with ♥ for Gotham.</footer>
+
+  <footer>
+    Made with ♥ for Gotham. Tipp: Drücke <kbd>/</kbd> für die Suche.
+  </footer>
 
   <script>
+    // --- Config ---
     const DATA_LIST_URL = './data/list.json';
     const DATA_FALLBACK_URL = './comics.json';
+
     const $ = sel => document.querySelector(sel);
 
-    const state = { raw:[], view:[], readSet:new Set(JSON.parse(localStorage.getItem('batman-read')||'[]')) };
-    const el = { grid:$('#grid'), empty:$('#empty'), q:$('#q'), series:$('#series'), year:$('#year'), event:$('#event'), sort:$('#sort'),
-                 count:$('#count'), readCount:$('#readCount'), progress:$('#progress') };
+    const state = {
+      raw: [],
+      view: [],
+      readSet: new Set(JSON.parse(localStorage.getItem('batman-read')||'[]'))
+    };
 
+    const el = {
+      grid: $('#grid'), empty: $('#empty'),
+      q: $('#q'), series: $('#series'), year: $('#year'), event: $('#event'), sort: $('#sort'),
+      count: $('#count'), readCount: $('#readCount'), progress: $('#progress')
+    };
+
+    // Init
     init();
     async function init(){
       try{
@@ -122,8 +195,12 @@
             state.raw = Array.isArray(d) ? d : (d.items || []);
           }
         }
-      }catch(e){ console.error(e); state.raw = []; }
+      }catch(e){
+        console.error(e);
+        state.raw = [];
+      }
 
+      // Dedupe
       const seen = new Set();
       state.raw = state.raw.filter(x=>{
         const id = (x.id || `${x.series||''}#${x.issue||''}-${x.title||''}`).toLowerCase();
@@ -135,6 +212,7 @@
       apply();
     }
 
+    // Build filter dropdowns
     function buildFilters(){
       const items = state.raw.map(normalize);
       const bySeries = new Set(items.map(x=>x.series).filter(Boolean));
@@ -152,11 +230,15 @@
       }).join('');
       if([...(select.options)].some(o=>o.value===cur)) select.value = cur;
     }
+
+    // UI bindings
     function bindUI(){
+      // '/' fokussiert Suche
       window.addEventListener('keydown', (e)=>{ if(e.key==='/' && document.activeElement!==el.q){ e.preventDefault(); el.q.focus(); el.q.select(); } });
       [el.q, el.series, el.year, el.event, el.sort].forEach(c=> c.addEventListener('input', apply));
     }
 
+    // Helpers: cover + date
     function firstCover(covers){
       if(!covers) return '';
       if(typeof covers==='string') return covers;
@@ -165,49 +247,73 @@
       return '';
     }
     function parseDateToTS(s, year){
-      if(s){ const d1=new Date(String(s).trim()); if(!isNaN(d1)) return d1.getTime();
+      if(s){
+        const d1=new Date(String(s).trim());
+        if(!isNaN(d1)) return d1.getTime();
         const m=/^(\d{4})(?:[-/.](\d{1,2})(?:[-/.](\d{1,2}))?)?$/.exec(s);
         if(m){ return new Date(+m[1], (+m[2]||1)-1, +m[3]||1).getTime(); }
       }
       if(year) return new Date(Number(year),0,1).getTime();
       return 0;
     }
+
+    // Normalize items
     function normalize(item){
       const id = item.id || `${(item.series||'')}#${(item.issue||'')}-${(item.title||'')}`.toLowerCase().replace(/\s+/g,'_');
       const chars = Array.isArray(item.characters)? item.characters.join(', '):(item.characters||'');
       const dateRaw = item.date||item.release_date||item.released||item.published||item.publication_date||item.cover_date||'';
       const ts = parseDateToTS(dateRaw, item.year);
-      return { id, title:item.title||'Ohne Titel', issue:item.issue??'', year:Number(item.year)||'',
-        series:item.series||'Batman', cover:firstCover(item.covers)||item.cover||item.image||item.image_url||item.thumbnail||'',
-        characters:chars, event:item.event||'', dcui:item.dcui||item.dcui_link||'', page_count:item.page_count??item.pages??'', format:item.format||'', date:dateRaw||'', ts };
+      return {
+        id,
+        title: item.title || 'Ohne Titel',
+        issue: item.issue ?? '',
+        year: Number(item.year) || '',
+        series: item.series || 'Batman',
+        cover: firstCover(item.covers)||item.cover||item.image||item.image_url||item.thumbnail||'',
+        characters: chars,
+        event: item.event || '',
+        dcui: item.dcui || item.dcui_link || '',
+        page_count: item.page_count ?? item.pages ?? '',
+        format: item.format || '',
+        date: dateRaw || '',
+        ts
+      };
     }
 
+    // Apply filters + sort + render
     function apply(){
-      const q=(el.q.value||'').trim().toLowerCase();
-      const fSeries=el.series.value, fYear=el.year.value, fEvent=el.event.value;
-      let items=state.raw.map(normalize).filter(x=>{
-        if(fSeries&&x.series!==fSeries) return false;
-        if(fYear&&String(x.year)!==String(fYear)) return false;
-        if(fEvent&&x.event!==fEvent) return false;
-        if(q){ const hay=`${x.title} ${x.characters} ${x.event} ${x.series}`.toLowerCase(); if(!fuzzyIncludes(hay,q)) return false; }
+      const q = (el.q.value||'').trim().toLowerCase();
+      const fSeries = el.series.value, fYear = el.year.value, fEvent = el.event.value;
+
+      let items = state.raw.map(normalize).filter(x=>{
+        if(fSeries && x.series!==fSeries) return false;
+        if(fYear && String(x.year)!==String(fYear)) return false;
+        if(fEvent && x.event!==fEvent) return false;
+        if(q){
+          const hay = `${x.title} ${x.characters} ${x.event} ${x.series}`.toLowerCase();
+          if(!fuzzyIncludes(hay, q)) return false;
+        }
         return true;
       });
-      const sort=el.sort.value;
+
+      const sort = el.sort.value;
       items.sort((a,b)=>{
         switch(sort){
-          case 'dateAsc': return (a.ts||0)-(b.ts||0)||String(a.title).localeCompare(String(b.title));
-          case 'dateDesc':return (b.ts||0)-(a.ts||0)||String(a.title).localeCompare(String(b.title));
-          case 'titleAsc':return String(a.title).localeCompare(String(b.title));
+          case 'dateAsc':  return (a.ts||0)-(b.ts||0) || String(a.title).localeCompare(String(b.title));
+          case 'dateDesc': return (b.ts||0)-(a.ts||0) || String(a.title).localeCompare(String(b.title));
+          case 'titleAsc': return String(a.title).localeCompare(String(b.title));
           case 'titleDesc':return String(b.title).localeCompare(String(a.title));
           default: return 0;
         }
       });
-      state.view=items;
+
+      state.view = items;
       render();
-      el.count.textContent=String(items.length);
+      el.count.textContent = String(items.length);
       updateStats();
     }
 
+    // Render cards
     function render(){
       el.grid.innerHTML='';
       for(const x of state.view){
@@ -215,7 +321,7 @@
         card.className='card';
         const isRead=state.readSet.has(x.id);
         card.innerHTML=`
-          <button class="read-toggle ${isRead?'active':''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}">
+          <button class="read-toggle ${isRead?'active':''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}" title="Gelesen umschalten">
             <i></i><span>${isRead? 'Gelesen':'Ungelesen'}</span>
           </button>
           <div class="cover-wrap">
@@ -225,34 +331,40 @@
             ${x.dcui? `<a class="dcui" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener">DCUI</a>`:''}
           </div>
           <div class="content">
-            <div class="h">${escapeHtml(x.title)} <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small></div>
+            <div class="h" title="${escapeHtml(x.series)}">${escapeHtml(x.title)} <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small></div>
             <div class="meta">
-              <span class="tag">${escapeHtml(x.series)}</span>
-              ${x.year? `<span class="tag">${x.year}</span>`:''}
-              ${x.event? `<span class="tag">${escapeHtml(x.event)}</span>`:''}
+              <span class="tag" title="Serie">${escapeHtml(x.series)}</span>
+              ${x.year? `<span class="tag" title="Jahr">${x.year}</span>`:''}
+              ${x.event? `<span class="tag" title="Event/Storyline">${escapeHtml(x.event)}</span>`:''}
             </div>
           </div>`;
-        card.querySelector('.read-toggle').addEventListener('click',e=>{
+
+        // Read toggle
+        const btn = card.querySelector('.read-toggle');
+        btn.addEventListener('click', (e)=>{
           e.preventDefault(); e.stopPropagation();
           toggleRead(x.id);
-          const active=state.readSet.has(x.id);
-          const btn=e.currentTarget;
-          btn.classList.toggle('active',active);
-          btn.setAttribute('aria-pressed',active);
-          btn.querySelector('span').textContent=active?'Gelesen':'Ungelesen';
+          const active = state.readSet.has(x.id);
+          btn.classList.toggle('active', active);
+          btn.setAttribute('aria-pressed', active);
+          btn.querySelector('span').textContent = active ? 'Gelesen' : 'Ungelesen';
           updateStats();
         });
+
         el.grid.appendChild(card);
       }
-      el.empty.hidden=state.view.length!==0;
+      el.empty.hidden = state.view.length !== 0;
     }
 
+    // Read state
     function toggleRead(id){
       if(state.readSet.has(id)) state.readSet.delete(id);
       else state.readSet.add(id);
       persistRead();
     }
-    function persistRead(){ localStorage.setItem('batman-read', JSON.stringify([...state.readSet])); }
+    function persistRead(){
+      localStorage.setItem('batman-read', JSON.stringify([...state.readSet]));
+    }
     function updateStats(){
       const total = state.raw.length || 1;
       const rawIds = new Set(
@@ -265,6 +377,7 @@
       el.progress.title = pct + '% abgeschlossen';
     }
 
+    // Misc helpers
     function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
     function fuzzyIncludes(hay, needle){ return needle.split(/\s+/).every(tok => hay.includes(tok)); }
   </script>
