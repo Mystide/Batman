@@ -6,10 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Batman Comic Guide</title>
   <style>
-    :root{
-      --bg:#0b0d12; --bg-soft:#11141b; --ink:#e7ecf3; --muted:#9aa4b2;
-      --accent:#f1c40f; --accent-2:#ffd761; --outline:#1c2230; --ok:#31c48d; --danger:#f05252;
-    }
+    :root{ --bg:#0b0d12; --bg-soft:#11141b; --ink:#e7ecf3; --muted:#9aa4b2; --accent:#f1c40f; --accent-2:#ffd761; --outline:#1c2230; --ok:#31c48d; --danger:#f05252; }
     html,body{height:100%}
     body{
       margin:0;
@@ -20,27 +17,55 @@
       color:var(--ink);
       font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;
     }
+    .no-scroll{overflow:hidden}
+
     .container{max-width:1200px; margin:0 auto; padding:24px;}
+
     header{position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8px);
       background:linear-gradient(180deg, rgba(10,12,17,.9) 0%, rgba(10,12,17,.65) 100%); border-bottom:1px solid var(--outline);}
-    .head{display:flex; gap:16px; align-items:center; padding:14px 24px;}
+    .head{display:flex; gap:16px; align-items:center; justify-content:space-between; padding:14px 24px;}
+    .brand{display:flex; align-items:center; gap:12px}
     .logo{width:44px; height:44px; display:grid; place-items:center; border-radius:12px; background: radial-gradient(120% 140% at 30% 10%, #1b1f2a 0%, #0e1118 60%); border:1px solid var(--outline);}
     .logo svg{width:28px; height:28px; fill:var(--accent)}
     .title{font-size:20px; font-weight:700;}
     .subtitle{color:var(--muted); font-size:13px}
 
-    /* Toolbar: 6 Spalten (1fr + 5 Felder); Suche spannt 2 Spalten */
-    .toolbar{
-      display:grid; gap:10px;
-      grid-template-columns: 1fr repeat(5, minmax(120px, 170px));
-      align-items:end; padding: 0 24px 16px;
+    .top-actions{display:flex; align-items:center; gap:10px}
+    .icon-btn{display:inline-grid; place-items:center; width:38px; height:38px; border-radius:10px; border:1px solid var(--outline); background:#0f1320; color:var(--ink); cursor:pointer}
+    .icon-btn:hover{border-color:#2b3346}
+
+    .input-wrap{position:relative; display:flex; align-items:center}
+    .input-wrap input{flex:1; background:var(--bg-soft); color:var(--ink); border:1px solid var(--outline); border-radius:12px; padding:10px 12px; outline:none; width:100%}
+    .clear-input-btn{position:absolute; right:8px; top:50%; transform:translateY(-50%); width:24px; height:24px; border-radius:999px; border:1px solid var(--outline); background:#0f1320; color:var(--muted); cursor:pointer; display:none}
+    .clear-input-btn[aria-hidden="false"]{display:inline-grid; place-items:center}
+
+    .ghost-btn{background:#0f1320; color:var(--ink); border:1px solid var(--outline); border-radius:10px; padding:8px 10px; cursor:pointer; font-size:13px}
+    .ghost-btn.danger{color:#ffd1d1; border-color:#5b2a2a; background:#1a0f0f}
+
+    /* Drawer über allem + Glas-Effekt + Animation */
+    .drawer{position:fixed; inset:0; display:none; z-index:10000}
+    .drawer.open{display:block}
+    .drawer .shade{position:absolute; inset:0; background:#000; opacity:0; pointer-events:none; z-index:0; transition:opacity .25s ease}
+    .drawer.open .shade{opacity:.5; pointer-events:auto}
+    .drawer .panel{
+      position:absolute; right:0; top:0; bottom:0;
+      width:92%; max-width:420px;
+      background:rgba(11,15,24,0.9);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      border-left:1px solid var(--outline);
+      padding:18px; overflow:auto;
+      box-shadow:-10px 0 30px rgba(0,0,0,.45);
+      z-index:1;
+      transform: translateX(100%);
+      transition: transform .25s ease;
     }
-    .toolbar .field{display:flex; flex-direction:column; gap:6px}
+    .drawer.open .panel{transform: translateX(0)}
+
+    .drawer h3{margin:0 0 12px 0; font-size:16px}
+    .drawer .grid{display:grid; gap:10px}
     label{color:var(--muted); font-size:12px}
-    input[type="text"], select{
-      background:var(--bg-soft); color:var(--ink); border:1px solid var(--outline);
-      border-radius:12px; padding:10px 12px; outline:none;
-    }
+    select{background:var(--bg-soft); color:var(--ink); border:1px solid var(--outline); border-radius:12px; padding:10px 12px; outline:none; width:100%}
 
     .stats{display:flex; gap:14px; align-items:center; flex-wrap:wrap; color:var(--muted); padding: 2px 24px 16px;}
     .badge{display:inline-flex; gap:6px; align-items:center; background:#0f1320; border:1px solid var(--outline); padding:6px 10px; border-radius:999px; font-size:12px}
@@ -51,23 +76,8 @@
     .grid{display:grid; gap:14px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));}
 
     .card{position:relative; border:1px solid var(--outline); background:linear-gradient(180deg, #101521, #0d111a); border-radius:16px; overflow:hidden;}
-
-    /* Cover mit Overlay für besseren Button-Kontrast */
-    .cover-wrap{
-      position: relative;
-      aspect-ratio: 3/4.2;
-      display:grid; place-items:center;
-      background:#0c0f16; border-bottom:1px solid var(--outline);
-      overflow:hidden;
-    }
-    .cover-wrap::after{
-      content:"";
-      position:absolute; inset:0;
-      background: radial-gradient(120% 80% at 50% 20%, rgba(0,0,0,.35) 0%, rgba(0,0,0,.2) 40%, rgba(0,0,0,.0) 70%),
-                  linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.12) 45%, rgba(0,0,0,0) 80%);
-      pointer-events:none;
-      z-index: 1;
-    }
+    .cover-wrap{position: relative; aspect-ratio: 3/4.2; display:grid; place-items:center; background:#0c0f16; border-bottom:1px solid var(--outline); overflow:hidden;}
+    .cover-wrap::after{content:""; position:absolute; inset:0; background: radial-gradient(120% 80% at 50% 20%, rgba(0,0,0,.35) 0%, rgba(0,0,0,.2) 40%, rgba(0,0,0,.0) 70%), linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.12) 45%, rgba(0,0,0,0) 80%); pointer-events:none; z-index:1;}
     .cover{max-width:100%; max-height:100%; object-fit:contain; position:relative; z-index:0;}
 
     .content{padding:10px 12px 12px; display:grid; gap:8px}
@@ -76,301 +86,191 @@
     .tag{border:1px solid var(--outline); padding:2px 8px; border-radius:999px;}
 
     .dcui{position:absolute; bottom:8px; right:8px; font-size:10px; padding:4px 6px; border-radius:999px; background:rgba(0,0,0,.55); border:1px solid var(--outline); z-index:2}
-
-    /* Read toggle – hochkontrast, immer lesbar */
-    .read-toggle{
-      position:absolute; top:10px; right:10px; z-index:2;
-      display:flex; gap:8px; align-items:center;
-      padding:8px 10px; border-radius:12px;
-      font-size:12px; font-weight:700; letter-spacing:.2px;
-      background: rgba(0,0,0,.55);
-      border:1px solid var(--accent-2);
-      color: var(--accent-2);
-      box-shadow: 0 4px 18px rgba(0,0,0,.35);
-      backdrop-filter: blur(2px);
-      transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease, color .12s ease;
-    }
-    .read-toggle i{
-      width:12px; height:12px; border-radius:999px; border:1px solid var(--outline); background:transparent;
-    }
-    .read-toggle:hover{ transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,.45); }
-    .read-toggle.active{
-      border-color: var(--ok);
-      color: #d9ffef;
-    }
-    .read-toggle.active i{ background: var(--ok); border-color: rgba(0,0,0,.35); }
-
-    .skeleton{animation: shimmer 1.4s infinite linear; background: linear-gradient(90deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.11) 40%, rgba(255,255,255,0.07) 80%); background-size:200% 100%;}
-    @keyframes shimmer{ from{ background-position-x: 200% } to{ background-position-x: -200% } }
-    .empty{padding:28px; text-align:center; color:var(--muted); border:1px dashed var(--outline); border-radius:16px}
-    footer{padding:24px; color:var(--muted); text-align:center; border-top:1px solid var(--outline)}
-
-    /* Small screens */
-    @media (max-width: 900px){
-      .toolbar{grid-template-columns: 1fr 1fr;}
-    }
-    @media (max-width: 520px){
-      .read-toggle{ padding:10px 12px; font-size:13px; }
-      .read-toggle i{ width:13px; height:13px; }
-    }
+    .read-toggle{position:absolute; top:10px; right:10px; z-index:2; display:flex; gap:8px; align-items:center; padding:8px 10px; border-radius:12px; font-size:12px; font-weight:700; background: rgba(0,0,0,.55); border:1px solid var(--accent-2); color: var(--accent-2);}
+    .read-toggle.active{border-color: var(--ok); color:#d9ffef;}
   </style>
 </head>
 <body>
   <header>
     <div class="head container">
-      <div class="logo" aria-hidden="true">
-        <svg viewBox="0 0 64 32" role="img" aria-label="Batman Logo">
-          <path d="M32 4c-5 6-11-2-18 0 2 3 2 6 0 9-3-2-7-1-12 2 6 2 10 6 12 12 4-1 7-3 9-6 1 4 3 7 9 7s8-3 9-7c2 3 5 5 9 6 2-6 6-10 12-12-5-3-9-4-12-2-2-3-2-6 0-9-7-2-13 6-18 0z"/>
-        </svg>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 64 32" role="img" aria-label="Batman Logo"><path d="M32 4c-5 6-11-2-18 0 2 3 2 6 0 9-3-2-7-1-12 2 6 2 10 6 12 12 4-1 7-3 9-6 1 4 3 7 9 7s8-3 9-7c2 3 5 5 9 6 2-6 6-10 12-12-5-3-9-4-12-2-2-3-2-6 0-9-7-2-13 6-18 0z"/></svg>
+        </div>
+        <div>
+          <div class="title">Batman Comic Guide</div>
+          <div class="subtitle">Dark, clean & schnell – mit Suche, Filtern & Fortschritt</div>
+        </div>
       </div>
-      <div>
-        <div class="title">Batman Comic Guide</div>
-        <div class="subtitle">Dark, clean & schnell – mit Suche, Filtern & Fortschritt</div>
-      </div>
-    </div>
-
-    <div class="toolbar container" role="region" aria-label="Filter und Suche">
-      <div class="field" style="grid-column: span 2;">
-        <label for="q">Suche</label>
-        <input id="q" type="text" placeholder="z.B. Hush, Joker…" autocomplete="off" />
-      </div>
-      <div class="field">
-        <label for="series">Serie</label>
-        <select id="series"><option value="">Alle</option></select>
-      </div>
-      <div class="field">
-        <label for="year">Jahr</label>
-        <select id="year"><option value="">Alle</option></select>
-      </div>
-      <div class="field">
-        <label for="event">Event</label>
-        <select id="event"><option value="">Alle</option></select>
-      </div>
-      <div class="field">
-        <label for="sort">Sortierung</label>
-        <select id="sort">
-          <option value="dateAsc">Datum ↑</option>
-          <option value="dateDesc">Datum ↓</option>
-          <option value="titleAsc">Titel A–Z</option>
-          <option value="titleDesc">Titel Z–A</option>
-        </select>
+      <div class="top-actions">
+        <button id="openFilters" class="icon-btn" title="Filter & Sortierung"><span aria-hidden="true">☰</span></button>
       </div>
     </div>
+  </header>
 
-    <div class="stats container">
+  <div id="drawer" class="drawer" aria-hidden="true" aria-label="Filter-Panel">
+    <div class="shade" id="closeDrawer" tabindex="-1"></div>
+    <aside class="panel" role="dialog" aria-modal="true">
+      <h3>Suche & Filter</h3>
+      <div class="grid">
+        <div class="field">
+          <label for="mq">Suche</label>
+          <div class="input-wrap">
+            <input id="mq" type="text" placeholder="z.B. Hush, Joker…" autocomplete="off" />
+            <button id="mClearSearch" class="clear-input-btn" title="Suche zurücksetzen" aria-hidden="true" aria-label="Suche löschen">×</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="mseries">Serie</label>
+          <select id="mseries"><option value="">Alle</option></select>
+        </div>
+        <div class="field">
+          <label for="myear">Jahr</label>
+          <select id="myear"><option value="">Alle</option></select>
+        </div>
+        <div class="field">
+          <label for="mevent">Event</label>
+          <select id="mevent"><option value="">Alle</option></select>
+        </div>
+        <div class="field">
+          <label for="msort">Sortierung</label>
+          <select id="msort">
+            <option value="dateAsc">Datum ↑</option>
+            <option value="dateDesc">Datum ↓</option>
+            <option value="titleAsc">Titel A–Z</option>
+            <option value="titleDesc">Titel Z–A</option>
+          </select>
+        </div>
+        <div class="field" style="display:flex; gap:8px;">
+          <button id="mResetFilters" class="ghost-btn danger" style="flex:1">Reset</button>
+          <button id="closeDrawerBtn" class="ghost-btn" style="flex:1">Fertig</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <main class="container">
+    <div class="stats" id="stats">
       <span class="badge"><strong id="count">0</strong> Einträge</span>
       <span class="badge">Gelesen: <strong id="readCount">0</strong></span>
       <div class="bar" aria-hidden="true"><i id="progress"></i></div>
     </div>
-  </header>
 
-  <main class="container">
     <div id="grid" class="grid" aria-live="polite"></div>
     <div id="empty" class="empty" hidden>Keine Treffer.</div>
   </main>
 
-  <footer>
+  <footer class="container" style="border-top:1px solid var(--outline); text-align:center; color:var(--muted)">
     Made with ♥ for Gotham. Tipp: Drücke <kbd>/</kbd> für die Suche.
   </footer>
 
   <script>
-    // --- Konfiguration ---
-    // Mehrdatei-Loader: data/list.json enthält ein Array relativer Pfade (z. B. ["data/batman.json","data/detective.json", ...])
-    const DATA_LIST_URL = './data/list.json';
-    // Fallback: eine einzelne Datei (falls du alles in einer JSON hast)
-    const DATA_FALLBACK_URL = './comics.json';
-
-    // Demo-Daten: werden NUR verwendet, wenn nach dem Laden keine Items vorhanden sind
-    const DEMO_DATA = [
-      {id:"hush-608", title:"Hush, Teil 1", issue:"608", year:2002, date:"2002-10-01", series:"Batman (2002)", event:"Hush", characters:["Batman","Catwoman","Riddler","Joker"], cover:"https://upload.wikimedia.org/wikipedia/en/9/9f/Batman_Hush_cover.jpg"},
-      {id:"new52-1", title:"The Court of Owls", issue:"1", year:2011, date:"2011-09-21", series:"Batman (2011)", event:"Court of Owls", characters:["Batman","Nightwing","Court of Owls"], cover:"https://upload.wikimedia.org/wikipedia/en/1/1c/Batman_Vol_2_1.png"},
-      {id:"killing-joke", title:"The Killing Joke", issue:"One-Shot", year:1988, date:"1988-03-29", series:"One-Shot (1988)", event:"The Killing Joke", characters:["Batman","Joker","Barbara Gordon"], cover:"https://upload.wikimedia.org/wikipedia/en/9/9b/Batman_the_killing_joke.jpg"},
-      {id:"year-one-404", title:"Year One, Part 1", issue:"404", year:1987, date:"1987-02-01", series:"Batman (1987)", event:"Year One", characters:["Batman","Catwoman","James Gordon"], cover:"https://upload.wikimedia.org/wikipedia/en/3/3d/Batman_404.png"}
-    ];
-
     const $ = sel => document.querySelector(sel);
 
-    const state = {
-      raw: [],
-      view: [],
-      readSet: new Set(JSON.parse(localStorage.getItem('batman-read')||'[]'))
-    };
-
+    const state = { raw: [], view: [], readSet:new Set(JSON.parse(localStorage.getItem('batman-read')||'[]')) };
     const el = {
       grid: $('#grid'), empty: $('#empty'),
-      q: $('#q'), series: $('#series'), year: $('#year'), event: $('#event'), sort: $('#sort'),
-      count: $('#count'), readCount: $('#readCount'), progress: $('#progress')
+      mq: $('#mq'), mseries: $('#mseries'), myear: $('#myear'), mevent: $('#mevent'), msort: $('#msort'),
+      count: $('#count'), readCount: $('#readCount'), progress: $('#progress'),
+      mClearSearch: $('#mClearSearch'), mResetFilters: $('#mResetFilters'),
+      openFilters: $('#openFilters'), drawer: $('#drawer'), closeDrawer: $('#closeDrawer'), closeDrawerBtn: $('#closeDrawerBtn')
     };
 
-    // Init
+    const DEMO_DATA = [
+      {id:"batman1", title:"Batman: Year One", issue:"404", year:1987, series:"Batman (1987)", cover:"https://upload.wikimedia.org/wikipedia/en/3/3d/Batman_404.png", event:"Year One", date:"1987-02-01"},
+      {id:"killingjoke", title:"The Killing Joke", issue:"One-Shot", year:1988, series:"One-Shot (1988)", cover:"https://upload.wikimedia.org/wikipedia/en/9/9b/Batman_the_killing_joke.jpg", event:"Killing Joke", date:"1988-03-29"},
+      {id:"hush608", title:"Hush, Teil 1", issue:"608", year:2002, series:"Batman (2002)", cover:"https://upload.wikimedia.org/wikipedia/en/9/9f/Batman_Hush_cover.jpg", event:"Hush", date:"2002-10-01"},
+      {id:"owls1", title:"The Court of Owls", issue:"1", year:2011, series:"Batman (2011)", cover:"https://upload.wikimedia.org/wikipedia/en/1/1c/Batman_Vol_2_1.png", event:"Court of Owls", date:"2011-09-21"}
+    ];
+
     init();
-    async function init(){
-      try{
-        // 1) Versuche Liste mehrerer Dateien zu laden
-        const listRes = await safeFetchJson(DATA_LIST_URL);
-        if(listRes.ok && Array.isArray(listRes.data)){
-          const arrays = await Promise.all(
-            listRes.data.map(async p=>{
-              const r = await safeFetchJson(String(p));
-              return (r.ok && (Array.isArray(r.data) || r.data?.items)) ? (Array.isArray(r.data)? r.data : r.data.items) : [];
-            })
-          );
-          state.raw = arrays.flat();
-        }
-
-        // 2) Fallback: einzelne Datei
-        if(!state.raw.length){
-          const one = await safeFetchJson(DATA_FALLBACK_URL);
-          if(one.ok){
-            state.raw = Array.isArray(one.data) ? one.data : (one.data?.items || []);
-          }
-        }
-      }catch(e){
-        console.error(e);
-      }
-
-      // 3) Deduplizieren
-      const seen = new Set();
-      state.raw = state.raw.filter(x=>{
-        const id = (x?.id || `${x?.series||''}#${x?.issue||''}-${x?.title||''}`).toLowerCase();
-        if(seen.has(id)) return false; seen.add(id); return true;
-      });
-
-      // 4) Letzter Fallback: Demo-Daten (wenn nichts geladen wurde)
-      if(!state.raw.length){
-        state.raw = DEMO_DATA.slice();
-      }
-
+    function init(){
+      state.raw = DEMO_DATA.slice();
       buildFilters();
       bindUI();
       apply();
     }
 
-    // Sicherer Fetch → vermeidet harte Fehler bei CORS/404/Parsing
-    async function safeFetchJson(url){
-      try{
-        const r = await fetch(url, {cache:'no-store'});
-        if(!r.ok) return {ok:false, data:null};
-        const data = await r.json();
-        return {ok:true, data};
-      }catch{
-        return {ok:false, data:null};
-      }
-    }
-
-    // Filter-Dropdowns
     function buildFilters(){
       const items = state.raw.map(normalize);
       const bySeries = new Set(items.map(x=>x.series).filter(Boolean));
       const byEvent  = new Set(items.map(x=>x.event).filter(Boolean));
       const byYear   = new Set(items.map(x=>x.year).filter(Boolean));
-      fillSelect(el.series, ['Alle', ...[...bySeries].sort()]);
-      fillSelect(el.event,  ['Alle', ...[...byEvent].sort()]);
-      fillSelect(el.year,   ['Alle', ...[...byYear].sort((a,b)=>a-b).map(String)]);
+      fillSelect(el.mseries, ['Alle', ...[...bySeries].sort()]);
+      fillSelect(el.mevent,  ['Alle', ...[...byEvent].sort()]);
+      fillSelect(el.myear,   ['Alle', ...[...byYear].sort((a,b)=>a-b).map(String)]);
     }
     function fillSelect(select, items){
+      if(!select) return;
       const cur = select.value;
-      select.innerHTML = items.map((v,i)=>{
-        const val = i===0 ? '' : v;
-        return `<option value="${escapeHtml(val)}">${escapeHtml(v)}</option>`;
-      }).join('');
+      select.innerHTML = items.map((v,i)=>{ const val = i===0 ? '' : v; return `<option value="${escapeHtml(val)}">${escapeHtml(v)}</option>`; }).join('');
       if([...(select.options)].some(o=>o.value===cur)) select.value = cur;
     }
 
-    // UI
     function bindUI(){
-      // '/' fokussiert Suche
-      window.addEventListener('keydown', (e)=>{ if(e.key==='/' && document.activeElement!==el.q){ e.preventDefault(); el.q.focus(); el.q.select(); } });
-      [el.q, el.series, el.year, el.event, el.sort].forEach(c=> c.addEventListener('input', apply));
+      window.addEventListener('keydown', (e)=>{ 
+        if(e.key==='/' && document.activeElement!==el.mq){ e.preventDefault(); el.mq.focus(); el.mq.select(); } 
+        if(e.key==='Escape'){ drawer(false); } 
+      });
+      [el.mq, el.mseries, el.myear, el.mevent, el.msort].forEach(c=> c && c.addEventListener('input', ()=>{ apply(); updateClearBtn(); }));
+      if(el.mClearSearch) el.mClearSearch.addEventListener('click', ()=>{ el.mq.value=''; apply(); updateClearBtn(); el.mq.focus(); });
+      if(el.mResetFilters) el.mResetFilters.addEventListener('click', ()=>{ resetFilters(); apply(); });
+      if(el.openFilters) el.openFilters.addEventListener('click', ()=> drawer(!(el.drawer.classList.contains('open'))));
+      if(el.closeDrawer) el.closeDrawer.addEventListener('click', ()=> drawer(false));
+      if(el.closeDrawerBtn) el.closeDrawerBtn.addEventListener('click', ()=> drawer(false));
+      updateClearBtn();
     }
 
-    // Helpers: cover + date + series short
-    function firstCover(covers){
-      if(!covers) return '';
-      if(typeof covers==='string') return covers;
-      if(Array.isArray(covers)){ const c0=covers[0]; return typeof c0==='string'?c0:(c0.url||c0.src||''); }
-      if(typeof covers==='object'){ return covers.main||covers.cover||covers.url||covers.src||''; }
-      return '';
+    function drawer(open){
+      const on = !!open;
+      el.drawer.classList.toggle('open', on);
+      el.drawer.setAttribute('aria-hidden', on? 'false':'true');
+      document.body.classList.toggle('no-scroll', on);
     }
+
+    function resetFilters(){
+      el.mseries.value=''; el.myear.value=''; el.mevent.value=''; el.msort.value='dateAsc';
+    }
+
+    function updateClearBtn(){ const has = !!(el.mq && el.mq.value); if(el.mClearSearch) el.mClearSearch.setAttribute('aria-hidden', has? 'false':'true'); }
+
+    function normalize(item){
+      const id = item.id || `${(item.series||'')}#${(item.issue||'')}-${(item.title||'')}`.toLowerCase().replace(/\s+/g,'_');
+      const dateRaw = item.date||item.release_date||item.published||'';
+      return { id, title:item.title||'Ohne Titel', issue:item.issue??'', year:Number(item.year)||'', series:item.series||'Batman', cover:item.cover||'', event:item.event||'', date:dateRaw, ts: parseDateToTS(dateRaw, item.year) };
+    }
+
     function parseDateToTS(s, year){
-      if(s){
-        const d1=new Date(String(s).trim());
-        if(!isNaN(d1)) return d1.getTime();
-        const m=/^(\d{4})(?:[-/.](\d{1,2})(?:[-/.](\d{1,2}))?)?$/.exec(s);
-        if(m){ return new Date(+m[1], (+m[2]||1)-1, +m[3]||1).getTime(); }
-      }
+      if(s){ const d1=new Date(String(s).trim()); if(!isNaN(d1)) return d1.getTime(); const m=/(\d{4})(?:[-/.](\d{1,2})(?:[-/.](\d{1,2}))?)?/.exec(s); if(m){ return new Date(+m[1], (+m[2]||1)-1, +m[3]||1).getTime(); } }
       if(year) return new Date(Number(year),0,1).getTime();
       return 0;
     }
     function formatDateDE(dateRaw, year){
-      if(dateRaw){
-        const str=String(dateRaw).trim();
-        const m=/^(\d{4})(?:[-/.](\d{1,2})(?:[-/.](\d{1,2}))?)?$/.exec(str);
-        if(m){
-          const yy=+m[1], mm=+(m[2]||1), dd=+(m[3]||1);
-          const D=new Date(yy,mm-1,dd);
-          if(!isNaN(D)) return `${String(D.getDate()).padStart(2,'0')}.${String(D.getMonth()+1).padStart(2,'0')}.${D.getFullYear()}`;
-        }
-        const d2=new Date(str);
-        if(!isNaN(d2)) return `${String(d2.getDate()).padStart(2,'0')}.${String(d2.getMonth()+1).padStart(2,'0')}.${d2.getFullYear()}`;
-      }
-      if(year) return `01.01.${String(year)}`;
-      return '';
+      if(dateRaw){ const d=new Date(dateRaw); if(!isNaN(d)) return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; }
+      if(year) return `01.01.${String(year)}`; return '';
     }
-    function shortSeries(s){
-      const m = /^(.*)\((\d{4})\)\s*$/.exec(String(s||'').trim());
-      return m ? `${m[1].trim()} ’${String(m[2]).slice(2)}` : (s||'');
-    }
+    function shortSeries(s){ const m=/^(.*)\((\d{4})\)\s*$/.exec(String(s||'').trim()); return m ? `${m[1].trim()} ’${String(m[2]).slice(2)}` : (s||''); }
 
-    // Normalize
-    function normalize(item){
-      const id = item.id || `${(item.series||'')}#${(item.issue||'')}-${(item.title||'')}`.toLowerCase().replace(/\s+/g,'_');
-      const chars = Array.isArray(item.characters)? item.characters.join(', '):(item.characters||'');
-      const dateRaw = item.date||item.release_date||item.released||item.published||item.publication_date||item.cover_date||'';
-      const ts = parseDateToTS(dateRaw, item.year);
-      return {
-        id,
-        title: item.title || 'Ohne Titel',
-        issue: item.issue ?? '',
-        year: Number(item.year) || '',
-        series: item.series || 'Batman',
-        cover: firstCover(item.covers)||item.cover||item.image||item.image_url||item.thumbnail||'',
-        characters: chars,
-        event: item.event || '',
-        dcui: item.dcui || item.dcui_link || '',
-        page_count: item.page_count ?? item.pages ?? '',
-        format: item.format || '',
-        date: dateRaw || '',
-        ts
-      };
-    }
-
-    // Apply filters + sort + render
     function apply(){
-      const q = (el.q.value||'').trim().toLowerCase();
-      const fSeries = el.series.value, fYear = el.year.value, fEvent = el.event.value;
+      const q = (el.mq && el.mq.value || '').trim().toLowerCase();
+      const fSeries = el.mseries ? el.mseries.value : '';
+      const fYear = el.myear ? el.myear.value : '';
+      const fEvent = el.mevent ? el.mevent.value : '';
 
       let items = state.raw.map(normalize).filter(x=>{
         if(fSeries && x.series!==fSeries) return false;
         if(fYear && String(x.year)!==String(fYear)) return false;
         if(fEvent && x.event!==fEvent) return false;
-        if(q){
-          const hay = `${x.title} ${x.characters} ${x.event} ${x.series}`.toLowerCase();
-          if(!q.split(/\s+/).every(tok => hay.includes(tok))) return false;
-        }
+        if(q){ const hay = `${x.title} ${x.series} ${x.event}`.toLowerCase(); if(!q.split(/\s+/).every(tok=>hay.includes(tok))) return false; }
         return true;
       });
 
-      const sort = el.sort.value;
-      items.sort((a,b)=>{
-        switch(sort){
-          case 'dateAsc':  return (a.ts||0)-(b.ts||0) || String(a.title).localeCompare(String(b.title));
-          case 'dateDesc': return (b.ts||0)-(a.ts||0) || String(a.title).localeCompare(String(b.title));
-          case 'titleAsc': return String(a.title).localeCompare(String(b.title));
-          case 'titleDesc':return String(b.title).localeCompare(String(a.title));
-          default: return 0;
-        }
-      });
+      switch(el.msort ? el.msort.value : 'dateAsc'){
+        case 'dateAsc':  items.sort((a,b)=> (a.ts||0)-(b.ts||0) || a.title.localeCompare(b.title)); break;
+        case 'dateDesc': items.sort((a,b)=> (b.ts||0)-(a.ts||0) || a.title.localeCompare(b.title)); break;
+        case 'titleAsc': items.sort((a,b)=> a.title.localeCompare(b.title)); break;
+        case 'titleDesc':items.sort((a,b)=> b.title.localeCompare(a.title)); break;
+      }
 
       state.view = items;
       render();
@@ -378,62 +278,33 @@
       updateStats();
     }
 
-    // Render cards
     function render(){
-      el.grid.innerHTML='';
+      const g = el.grid; g.innerHTML='';
       for(const x of state.view){
+        const isRead=state.readSet.has(x.id);
         const card=document.createElement('article');
         card.className='card';
-        const isRead=state.readSet.has(x.id);
         card.innerHTML=`
-          <button class="read-toggle ${isRead?'active':''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}" title="Gelesen umschalten">
-            <i></i><span>${isRead? 'Gelesen':'Ungelesen'}</span>
-          </button>
-          <div class="cover-wrap">
-            ${x.cover? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" src="${escapeHtml(x.cover)}"
-              referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.style.outline='2px solid #f05252';">`
-              : '<div class="cover skeleton" style="width:70%; height:70%"></div>'}
-            ${x.dcui? `<a class="dcui" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener">DCUI</a>`:''}
-          </div>
+          <button class="read-toggle ${isRead?'active':''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}" title="Gelesen umschalten">${isRead?'Gelesen':'Ungelesen'}</button>
+          <div class="cover-wrap">${x.cover? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer" crossorigin="anonymous">` : '<div class="cover" style="width:70%; height:70%"></div>'}</div>
           <div class="content">
             <div class="h" title="${escapeHtml(x.series)}">${escapeHtml(x.title)} <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small></div>
-            <div class="meta">
-              ${x.ts ? `<span class="tag" title="Datum">${escapeHtml(formatDateDE(x.date, x.year))}</span>` : ''}
-              <span class="tag" title="Serie">${escapeHtml(shortSeries(x.series))}</span>
-              ${x.event? `<span class="tag" title="Event/Storyline">${escapeHtml(x.event)}</span>`:''}
-            </div>
+            <div class="meta">${x.ts? `<span class="tag" title="Datum">${escapeHtml(formatDateDE(x.date, x.year))}</span>`: ''}<span class="tag" title="Serie">${escapeHtml(shortSeries(x.series))}</span>${x.event? `<span class="tag" title="Event/Storyline">${escapeHtml(x.event)}</span>`:''}</div>
           </div>`;
-
-        const btn = card.querySelector('.read-toggle');
-        btn.addEventListener('click', (e)=>{
-          e.preventDefault(); e.stopPropagation();
-          toggleRead(x.id);
-          const active = state.readSet.has(x.id);
-          btn.classList.toggle('active', active);
-          btn.setAttribute('aria-pressed', active);
-          btn.querySelector('span').textContent = active ? 'Gelesen' : 'Ungelesen';
-          updateStats();
+        card.querySelector('.read-toggle').addEventListener('click',()=>{
+          if(state.readSet.has(x.id)) state.readSet.delete(x.id); else state.readSet.add(x.id);
+          persistRead();
+          apply();
         });
-
-        el.grid.appendChild(card);
+        g.appendChild(card);
       }
       el.empty.hidden = state.view.length !== 0;
     }
 
-    // Read state
-    function toggleRead(id){
-      if(state.readSet.has(id)) state.readSet.delete(id);
-      else state.readSet.add(id);
-      persistRead();
-    }
-    function persistRead(){
-      localStorage.setItem('batman-read', JSON.stringify([...state.readSet]));
-    }
+    function persistRead(){ localStorage.setItem('batman-read', JSON.stringify([...state.readSet])); }
     function updateStats(){
       const total = state.raw.length || 1;
-      const rawIds = new Set(
-        state.raw.map(it => (it.id || `${it.series||''}#${it.issue||''}-${it.title||''}`).toLowerCase().replace(/\s+/g,'_'))
-      );
+      const rawIds = new Set(state.raw.map(it => (it.id || `${it.series||''}#${it.issue||''}-${it.title||''}`).toLowerCase().replace(/\s+/g,'_')));
       const read = [...state.readSet].filter(id => rawIds.has(id)).length;
       el.readCount.textContent = String(read);
       const pct = Math.min(100, Math.round((read/total)*100));
@@ -441,7 +312,6 @@
       el.progress.title = pct + '% abgeschlossen';
     }
 
-    // Misc helpers
     function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
   </script>
 </body>
