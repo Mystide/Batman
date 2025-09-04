@@ -1,5 +1,6 @@
 import { loadData } from './api.js';
 import { buildFilters, bindUI, loadFilters, apply } from './filters.js';
+import config from './config.json' assert { type: 'json' };
 
 const $ = sel => document.querySelector(sel);
 
