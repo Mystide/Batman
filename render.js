@@ -1,5 +1,7 @@
 import { formatDateDE, shortSeries, escapeHtml } from './api.js';
 
+const AUTH_TOKEN = 'mysecrettoken';
+
 export function updateStats(state, el){
   const rawIds = new Set(state.raw.map(it => (it.id || `${it.series||''}#${it.issue||''}-${it.title||''}`).toLowerCase().replace(/\s+/g,'_')));
   const read = [...state.readSet].filter(id => rawIds.has(id)).length;
@@ -40,7 +42,20 @@ export function render(state, el){
       const id = x.id;
       const wasRead = state.readSet.has(id);
       if(wasRead) state.readSet.delete(id); else state.readSet.add(id);
-      localStorage.setItem('batman-read', JSON.stringify([...state.readSet]));
+            const payload = [...state.readSet];
+      fetch('/read-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AUTH_TOKEN}`
+        },
+        body: JSON.stringify(payload)
+      }).then(res => {
+        if(!res.ok) throw new Error('Failed');
+        localStorage.setItem('batman-read', JSON.stringify(payload));
+      }).catch(() => {
+        localStorage.setItem('batman-read', JSON.stringify(payload));
+      });
 
       const nowRead = state.readSet.has(id);
       btn.classList.toggle('active', nowRead);
