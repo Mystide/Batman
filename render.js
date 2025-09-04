@@ -63,7 +63,7 @@ export function render(state, el) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${AUTH_TOKEN}`
+          Authorization: `Bearer ${AUTH_TOKEN}`
         },
         body: JSON.stringify(payload)
       })
