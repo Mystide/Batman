@@ -32,8 +32,12 @@
     .drawer.open .panel{transform:translateX(0)}
     .drawer h3{margin:0 0 12px 0; font-size:16px}
     .drawer .grid{display:grid; gap:12px}
+    .field{position:relative}
     .field label{color:var(--muted); font-size:12px; display:block; margin-bottom:6px}
-    .field input,.field select{background:var(--bg-soft); color:var(--ink); border:1px solid var(--outline); border-radius:12px; padding:10px 12px; outline:none; width:100%}
+    .field input,.field select{background:var(--bg-soft); color:var(--ink); border:1px solid var(--outline); border-radius:12px; padding:10px 36px 10px 12px; outline:none; width:100%}
+    .field.span-2{grid-column:1 / -1}
+    .clear-btn{position:absolute; right:8px; top:28px; width:22px; height:22px; border:1px solid var(--outline); border-radius:50%; background:#0f1320; color:#ccc; cursor:pointer; display:none; line-height:20px}
+    .field input:not(:placeholder-shown) + .clear-btn{display:block}
     .drawer-actions{display:flex; gap:8px}
     .ghost-btn{background:#0f1320; color:var(--ink); border:1px solid var(--outline); border-radius:10px; padding:10px 12px; cursor:pointer; font-size:13px}
     .ghost-btn.danger{color:#ffd1d1; border-color:#5b2a2a; background:#1a0f0f}
@@ -58,6 +62,8 @@
 
     .read-toggle{position:absolute; top:10px; right:10px; z-index:2; padding:6px 10px; border-radius:12px; font-size:12px; font-weight:700; background:rgba(0,0,0,.6); border:1px solid var(--accent-2); color:var(--accent-2)}
     .read-toggle.active{border-color:var(--ok); color:#d9ffef}
+
+    @media (min-width: 900px){ .drawer .grid{grid-template-columns:1fr 1fr} }
   </style>
 </head>
 <body>
@@ -76,11 +82,16 @@
     <aside class="panel" role="dialog" aria-modal="true">
       <h3>Suche & Filter</h3>
       <div class="grid">
-        <div class="field"><label for="mq">Suche</label><input id="mq" type="text" placeholder="z.B. Hush, Joker…"></div>
+        <div class="field span-2">
+          <label for="mq">Suche</label>
+          <input id="mq" type="text" placeholder="z.B. Hush, Joker…">
+          <button class="clear-btn" id="clearSearch" aria-label="Suche löschen">×</button>
+        </div>
         <div class="field"><label for="mseries">Serie</label><select id="mseries"><option value="">Alle Serien</option></select></div>
         <div class="field"><label for="myear">Jahr</label><select id="myear"><option value="">Alle Jahre</option></select></div>
         <div class="field"><label for="mevent">Event</label><select id="mevent"><option value="">Alle Events</option></select></div>
-        <div class="field"><label for="msort">Sortierung</label>
+        <div class="field">
+          <label for="msort">Sortierung</label>
           <select id="msort">
             <option value="dateAsc">Datum ↑</option>
             <option value="dateDesc">Datum ↓</option>
@@ -88,8 +99,12 @@
             <option value="titleDesc">Titel Z–A</option>
           </select>
         </div>
+        <div class="field">
+          <label for="hideRead">Anzeige</label>
+          <label style="display:flex;align-items:center;gap:8px"><input id="hideRead" type="checkbox"> Gelesene ausblenden</label>
+        </div>
         <div class="drawer-actions">
-          <button id="mResetFilters" class="ghost-btn danger" style="flex:1">Reset</button>
+          <button id="mResetFilters" class="ghost-btn danger" style="flex:1">Alle Filter zurücksetzen</button>
           <button id="closeDrawerBtn" class="ghost-btn" style="flex:1">Fertig</button>
         </div>
       </div>
@@ -112,17 +127,20 @@
     const $ = sel => document.querySelector(sel);
 
     const state = { raw: [], view: [], readSet:new Set(JSON.parse(localStorage.getItem('batman-read')||'[]')) };
-    const el = { grid:$('#grid'), empty:$('#empty'), mq:$('#mq'), mseries:$('#mseries'), myear:$('#myear'), mevent:$('#mevent'), msort:$('#msort'), count:$('#count'), readCount:$('#readCount'), progress:$('#progress'), openFilters:$('#openFilters'), drawer:$('#drawer'), closeDrawer:$('#closeDrawer'), closeDrawerBtn:$('#closeDrawerBtn'), mResetFilters:$('#mResetFilters') };
+    const el = {
+      grid:$('#grid'), empty:$('#empty'),
+      mq:$('#mq'), mseries:$('#mseries'), myear:$('#myear'), mevent:$('#mevent'), msort:$('#msort'),
+      hideRead:$('#hideRead'),
+      count:$('#count'), readCount:$('#readCount'), progress:$('#progress'),
+      openFilters:$('#openFilters'), drawer:$('#drawer'), closeDrawer:$('#closeDrawer'), closeDrawerBtn:$('#closeDrawerBtn'),
+      mResetFilters:$('#mResetFilters'), clearSearch:$('#clearSearch')
+    };
 
+    // ein paar Demo-Einträge, wenn keine JSONs gefunden werden
     const DEMO_DATA = [
       {id:"batman_year_one", title:"Batman: Year One", issue:"404", year:1987, series:"Batman (1987)", cover:"https://upload.wikimedia.org/wikipedia/en/3/3d/Batman_404.png", event:"Year One", date:"1987-02-01"},
       {id:"killing_joke", title:"The Killing Joke", issue:"One-Shot", year:1988, series:"One-Shot (1988)", cover:"https://upload.wikimedia.org/wikipedia/en/9/9b/Batman_the_killing_joke.jpg", event:"Killing Joke", date:"1988-03-29"},
-      {id:"hush_608", title:"Hush, Teil 1", issue:"608", year:2002, series:"Batman (2002)", cover:"https://upload.wikimedia.org/wikipedia/en/9/9f/Batman_Hush_cover.jpg", event:"Hush", date:"2002-10-01"},
-      {id:"owls_1", title:"The Court of Owls", issue:"1", year:2011, series:"Batman (2011)", cover:"https://upload.wikimedia.org/wikipedia/en/1/1c/Batman_Vol_2_1.png", event:"Court of Owls", date:"2011-09-21"},
-      {id:"dark_knight_returns_1", title:"The Dark Knight Returns #1", issue:"1", year:1986, series:"DKR (1986)", cover:"https://upload.wikimedia.org/wikipedia/en/9/9d/Dark_Knight_Returns_1.png", event:"DKR", date:"1986-02-01"},
-      {id:"long_halloween_1", title:"The Long Halloween #1", issue:"1", year:1996, series:"Long Halloween (1996)", cover:"https://upload.wikimedia.org/wikipedia/en/3/3d/Batman_the_long_halloween.jpg", event:"Long Halloween", date:"1996-12-01"},
-      {id:"death_in_family_426", title:"A Death in the Family #426", issue:"426", year:1988, series:"Batman (1988)", cover:"https://upload.wikimedia.org/wikipedia/en/0/0e/Batman426.jpg", event:"Death in the Family", date:"1988-08-01"},
-      {id:"white_knight_1", title:"Batman: White Knight #1", issue:"1", year:2017, series:"White Knight (2017)", cover:"https://upload.wikimedia.org/wikipedia/en/6/6c/Batman_White_Knight_1.png", event:"White Knight", date:"2017-10-04"}
+      {id:"hush_608", title:"Hush, Teil 1", issue:"608", year:2002, series:"Batman (2002)", cover:"https://upload.wikimedia.org/wikipedia/en/9/9f/Batman_Hush_cover.jpg", event:"Hush", date:"2002-10-01"}
     ];
 
     init();
@@ -156,7 +174,6 @@
 
       if(!loaded){ state.raw = DEMO_DATA.slice(); }
 
-      // Deduplizieren
       const seen = new Set();
       state.raw = state.raw.filter(x=>{
         const id = (x.id || `${x.series||''}#${x.issue||''}-${x.title||''}`).toLowerCase();
@@ -184,8 +201,15 @@
       el.closeDrawer?.addEventListener('click',()=>drawer(false));
       el.closeDrawerBtn?.addEventListener('click',()=>drawer(false));
       window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') drawer(false); });
-      el.mResetFilters?.addEventListener('click',()=>{el.mseries.value='';el.myear.value='';el.mevent.value='';el.msort.value='dateAsc';apply();});
-      [el.mq,el.mseries,el.myear,el.mevent,el.msort].forEach(c=>c&&c.addEventListener('input',apply));
+
+      el.mResetFilters?.addEventListener('click',()=>{
+        el.mseries.value=''; el.myear.value=''; el.mevent.value=''; el.msort.value='dateAsc';
+        el.mq.value=''; el.hideRead.checked=false; apply();
+      });
+      el.clearSearch?.addEventListener('click',()=>{ el.mq.value=''; apply(); });
+
+      [el.mq, el.mseries, el.myear, el.mevent, el.msort, el.hideRead]
+        .forEach(c=>c && c.addEventListener('input', apply));
     }
     function drawer(open){ el.drawer.classList.toggle('open',open); document.body.classList.toggle('no-scroll',open); }
 
@@ -195,27 +219,43 @@
       return { ...item, id, ts };
     }
 
-    function formatDateDE(dateRaw, year){ if(dateRaw){ const d=new Date(dateRaw); if(!isNaN(d)) return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; } if(year) return `01.01.${String(year)}`; return ''; }
+    function formatDateDE(dateRaw, year){
+      if(dateRaw){
+        const d=new Date(dateRaw);
+        if(!isNaN(d)) return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getFullYear()%100).padStart(2,'0')}`;
+      }
+      if(year) return `01.01.${String(Number(year)%100).padStart(2,'0')}`;
+      return '';
+    }
     function shortSeries(s){ const m=/^(.*)\((\d{4})\)\s*$/.exec(String(s||'').trim()); return m ? `${m[1].trim()} ’${String(m[2]).slice(2)}` : (s||''); }
     function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
 
     function apply(){
       const q=(el.mq.value||'').toLowerCase().trim();
       const fSeries=el.mseries.value; const fYear=el.myear.value; const fEvent=el.mevent.value;
+      const hideRead = !!(el.hideRead && el.hideRead.checked);
+
       let items=state.raw.map(normalize).filter(x=>{
         if(fSeries && x.series!==fSeries) return false;
         if(fYear && String(x.year)!==String(fYear)) return false;
         if(fEvent && x.event!==fEvent) return false;
-        if(q){ const hay=`${x.title} ${x.series} ${x.event}`.toLowerCase(); if(!q.split(/\s+/).every(tok=>hay.includes(tok))) return false; }
+        if(hideRead && state.readSet.has(x.id)) return false;
+        if(q){
+          const hay=`${x.title} ${x.series} ${x.event}`.toLowerCase();
+          if(!q.split(/\s+/).every(tok=>hay.includes(tok))) return false;
+        }
         return true;
       });
+
       switch(el.msort.value){
         case'dateAsc':items.sort((a,b)=>a.ts-b.ts||a.title.localeCompare(b.title));break;
         case'dateDesc':items.sort((a,b)=>b.ts-a.ts||a.title.localeCompare(b.title));break;
         case'titleAsc':items.sort((a,b)=>a.title.localeCompare(b.title));break;
         case'titleDesc':items.sort((a,b)=>b.title.localeCompare(a.title));break;
       }
-      state.view=items;render();
+
+      state.view=items;
+      render();
     }
 
     function render(){
@@ -227,12 +267,16 @@
         card.innerHTML=`
           <button class="read-toggle ${isRead?'active':''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}">${isRead?'Gelesen':'Ungelesen'}</button>
           <div class="cover-wrap">
-            ${x.cover?`<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.style.display='none'">`:''}
+            ${x.cover
+              ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" decoding="async"
+                     src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer" crossorigin="anonymous"
+                     onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\\'tag\\' style=\\'opacity:.7\\'>Kein Cover</div>');">`
+              : '<div class="tag" style="opacity:.7">Kein Cover</div>'}
           </div>
           <div class="content">
             <div class="h">${escapeHtml(x.title)}${x.issue?` <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small>`:''}</div>
             <div class="meta">
-              ${x.date?`<span class="tag">${formatDateDE(x.date,x.year)}</span>`:(x.year?`<span class="tag">01.01.${x.year}</span>`:'')}
+              ${x.date?`<span class="tag">${formatDateDE(x.date,x.year)}</span>`:(x.year?`<span class="tag">01.01.${String(Number(x.year)%100).padStart(2,'0')}</span>`:'')}
               ${x.series?`<span class="tag">${escapeHtml(shortSeries(x.series))}</span>`:''}
               ${x.event?`<span class="tag">${escapeHtml(x.event)}</span>`:''}
             </div>
@@ -246,6 +290,7 @@
       });
       el.empty.hidden=state.view.length>0;
       el.count.textContent=state.view.length;
+
       const rawIds = new Set(state.raw.map(it => (it.id || `${it.series||''}#${it.issue||''}-${it.title||''}`).toLowerCase().replace(/\s+/g,'_')));
       const read = [...state.readSet].filter(id => rawIds.has(id)).length;
       el.readCount.textContent = String(read);
