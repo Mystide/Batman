@@ -1,6 +1,10 @@
 import { formatDateDE, shortSeries, escapeHtml } from './api.js';
+import config from './config.json' assert { type: 'json' };
 
 const AUTH_TOKEN = 'mysecrettoken';
+
+const SERVER_URL = (typeof process !== 'undefined' && process.env.SERVER_URL) ||
+  config.SERVER_URL || 'https://meinserver.example:3000';
 
 export function updateStats(state, el){
   const rawIds = new Set(state.raw.map(it => (it.id || `${it.series||''}#${it.issue||''}-${it.title||''}`).toLowerCase().replace(/\s+/g,'_')));
@@ -43,7 +47,7 @@ export function render(state, el){
       const wasRead = state.readSet.has(id);
       if(wasRead) state.readSet.delete(id); else state.readSet.add(id);
             const payload = [...state.readSet];
-      fetch('/read-status', {
+     fetch(`${SERVER_URL}/read-status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
