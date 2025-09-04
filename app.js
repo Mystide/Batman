@@ -6,12 +6,12 @@ const $ = sel => document.querySelector(sel);
 
 const state = { raw: [], view: [], readSet: new Set() };
 const el = {
-  grid:$('#grid'), empty:$('#empty'),
-  mq:$('#mq'), mseries:$('#mseries'), myear:$('#myear'), mevent:$('#mevent'), msort:$('#msort'),
-  quickHideRead:$('#quickHideRead'),
-  count:$('#count'), readCount:$('#readCount'), progress:$('#progress'),
-  openFilters:$('#openFilters'), drawer:$('#drawer'), closeDrawer:$('#closeDrawer'), closeDrawerBtn:$('#closeDrawerBtn'),
-  mResetFilters:$('#mResetFilters'), clearSearch:$('#clearSearch')
+  grid: $('#grid'), empty: $('#empty'),
+  mq: $('#mq'), mseries: $('#mseries'), myear: $('#myear'), mevent: $('#mevent'), msort: $('#msort'),
+  quickHideRead: $('#quickHideRead'),
+  count: $('#count'), readCount: $('#readCount'), progress: $('#progress'),
+  openFilters: $('#openFilters'), drawer: $('#drawer'), closeDrawer: $('#closeDrawer'), closeDrawerBtn: $('#closeDrawerBtn'),
+  mResetFilters: $('#mResetFilters'), clearSearch: $('#clearSearch')
 };
 
 const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
