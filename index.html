@@ -48,19 +48,19 @@
     .bar>i{display:block; height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2))}
 
     main{padding:8px 24px 40px}
-    .grid{display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+    .grid{display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
 
     .card{position:relative; border:1px solid var(--outline); background:#101521; border-radius:16px; overflow:hidden}
-    .cover-wrap{position:relative; aspect-ratio:3/4.2; display:grid; place-items:center; background:#0c0f16; border-bottom:1px solid var(--outline)}
-    .cover-wrap::after{content:""; position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.12) 50%, rgba(0,0,0,0) 80%); pointer-events:none; z-index:1}
-    .cover{max-width:100%; max-height:100%; object-fit:contain; position:relative; z-index:0}
+    .cover-wrap{position:relative; aspect-ratio:3/4.2; display:block; background:#0c0f16; border-bottom:1px solid var(--outline)}
+    .cover-wrap::after{content:""; position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.10) 50%, rgba(0,0,0,0) 80%); pointer-events:none; z-index:1}
+    .cover{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0}
 
     .content{padding:10px 12px 12px; display:grid; gap:8px}
     .h{font-weight:700; font-size:14px}
     .meta{display:flex; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:12px}
     .tag{border:1px solid var(--outline); padding:2px 8px; border-radius:999px}
 
-    .read-toggle{position:absolute; top:10px; right:10px; z-index:2; padding:6px 10px; border-radius:12px; font-size:12px; font-weight:700; background:rgba(0,0,0,.6); border:1px solid var(--accent-2); color:var(--accent-2)}
+    .read-toggle{position:absolute; top:10px; right:10px; z-index:2; padding:6px 10px; border-radius:12px; font-size:12px; font-weight:700; background:rgba(0,0,0,.6); border:1px solid var(--accent-2); color:var(--accent-2); cursor:pointer}
     .read-toggle.active{border-color:var(--ok); color:#d9ffef}
 
     /* Quick toggle style */
@@ -141,11 +141,13 @@
       mResetFilters:$('#mResetFilters'), clearSearch:$('#clearSearch')
     };
 
+    const collator = new Intl.Collator('de', {numeric:true, sensitivity:'base'});
+
     // Demo (falls keine JSONs)
     const DEMO_DATA = [
-      {id:"batman_year_one", title:"Batman: Year One", issue:"404", year:1987, series:"Batman (1987)", cover:"https://upload.wikimedia.org/wikipedia/en/3/3d/Batman_404.png", event:"Year One", date:"1987-02-01"},
-      {id:"killing_joke", title:"The Killing Joke", issue:"One-Shot", year:1988, series:"One-Shot (1988)", cover:"https://upload.wikimedia.org/wikipedia/en/9/9b/Batman_the_killing_joke.jpg", event:"Killing Joke", date:"1988-03-29"},
-      {id:"hush_608", title:"Hush, Teil 1", issue:"608", year:2002, series:"Batman (2002)", cover:"https://upload.wikimedia.org/wikipedia/en/9/9f/Batman_Hush_cover.jpg", event:"Hush", date:"2002-10-01"}
+      {id:"batman_year_one", title:"Batman 1", issue:"1", year:1987, series:"Batman (1987)", cover:"https://upload.wikimedia.org/wikipedia/en/3/3d/Batman_404.png", event:"Year One", date:"1987-02-01"},
+      {id:"killing_joke", title:"Batman 10", issue:"10", year:1988, series:"One-Shot (1988)", cover:"https://upload.wikimedia.org/wikipedia/en/9/9b/Batman_the_killing_joke.jpg", event:"Killing Joke", date:"1988-03-29"},
+      {id:"hush_608", title:"Batman 100", issue:"100", year:2002, series:"Batman (2002)", cover:"https://upload.wikimedia.org/wikipedia/en/9/9f/Batman_Hush_cover.jpg", event:"Hush", date:"2002-10-01"}
     ];
 
     init();
@@ -191,14 +193,16 @@
       apply();
     }
 
+    function firstOf(...vals){ for(const v of vals){ if(v!=null && v!=='') return v; } return ''; }
+
     function buildFilters(){
       const items = state.raw.map(normalize);
       const bySeries=new Set(items.map(x=>x.series).filter(Boolean));
       const byEvent=new Set(items.map(x=>x.event).filter(Boolean));
-      const byYear=new Set(items.map(x=>x.year).filter(Boolean));
+      const byYear=new Set(items.map(x=>x.year).filter(y=> y!=='' && !Number.isNaN(Number(y))));
       fillSelect(el.mseries,['Alle Serien',...bySeries]);
       fillSelect(el.mevent,['Alle Events',...byEvent]);
-      fillSelect(el.myear,['Alle Jahre',...Array.from(byYear).sort((a,b)=>Number(a)-Number(b))]);
+      fillSelect(el.myear,['Alle Jahre',...Array.from(byYear).map(Number).sort((a,b)=>a-b).map(String)]);
     }
     function fillSelect(sel,items){ sel.innerHTML=items.map((v,i)=>`<option value="${i? v:''}">${v}</option>`).join(''); }
 
@@ -226,13 +230,23 @@
     }
     function drawer(open){ el.drawer.classList.toggle('open',open); document.body.classList.toggle('no-scroll',open); }
 
+    function extractYearFromSeries(series){
+      const m = /.*\((\d{4})\)\s*$/.exec(String(series||''));
+      return m ? Number(m[1]) : '';
+    }
+
     function normalize(item){
-      const y = Number(item.year);
-      const year = Number.isFinite(y) ? y : '';
-      const coverUrl = item.cover || item.covers || item.image || item.thumbnail || '';
+      // robustes Datum + Jahr:
+      const dateRaw = firstOf(item.date, item.release_date, item.publication_date, item.published);
+      let year = Number(item.year);
+      if(!Number.isFinite(year)){
+        const d = new Date(dateRaw||'');
+        year = !isNaN(d) ? d.getFullYear() : extractYearFromSeries(item.series);
+      }
+      const coverUrl = firstOf(item.cover, item.covers, item.image, item.thumbnail);
       const id=(item.id||`${item.series||''}#${item.issue||''}-${item.title||''}`).toLowerCase().replace(/\s+/g,'_');
-      const ts=item.date? new Date(item.date).getTime(): (year? new Date(year,0,1).getTime():0);
-      return { ...item, id, year, cover: coverUrl, ts };
+      const ts = dateRaw ? new Date(dateRaw).getTime() : (Number.isFinite(year) ? new Date(year,0,1).getTime() : 0);
+      return { ...item, id, year: Number.isFinite(year)?year:'', dateRaw, cover: coverUrl, ts };
     }
 
     function formatDateDE(dateRaw, year){
@@ -264,15 +278,26 @@
       });
 
       switch(el.msort.value){
-        case'dateAsc':items.sort((a,b)=>a.ts-b.ts||a.title.localeCompare(b.title));break;
-        case'dateDesc':items.sort((a,b)=>b.ts-a.ts||a.title.localeCompare(b.title));break;
-        case'titleAsc':items.sort((a,b)=>a.title.localeCompare(b.title));break;
-        case'titleDesc':items.sort((a,b)=>b.title.localeCompare(a.title));break;
+        case'dateAsc':items.sort((a,b)=>a.ts-b.ts||collator.compare(a.title,b.title));break;
+        case'dateDesc':items.sort((a,b)=>b.ts-a.ts||collator.compare(a.title,b.title));break;
+        case'titleAsc':items.sort((a,b)=>collator.compare(a.title,b.title));break;
+        case'titleDesc':items.sort((a,b)=>collator.compare(b.title,a.title));break;
       }
 
       state.view=items;
       saveFilters();
       render();
+    }
+
+    function updateStats(){
+      const rawIds = new Set(state.raw.map(it => (it.id || `${it.series||''}#${it.issue||''}-${it.title||''}`).toLowerCase().replace(/\s+/g,'_')));
+      const read = [...state.readSet].filter(id => rawIds.has(id)).length;
+      el.readCount.textContent = String(read);
+      const total = state.raw.length || 1;
+      const pct = Math.min(100, Math.round((read/total)*100));
+      el.progress.style.width = pct + '%';
+      el.progress.title = pct + '% abgeschlossen';
+      el.count.textContent = String(state.view.length);
     }
 
     function render(){
@@ -293,28 +318,39 @@
           <div class="content">
             <div class="h">${escapeHtml(x.title)}${x.issue?` <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small>`:''}</div>
             <div class="meta">
-              ${x.date?`<span class="tag">${formatDateDE(x.date,x.year)}</span>`:(x.year!==''?`<span class="tag">01.01.${String(Number(x.year)%100).padStart(2,'0')}</span>`:'')}
+              ${formatDateDE(x.dateRaw, x.year)?`<span class="tag">${formatDateDE(x.dateRaw,x.year)}</span>`:''}
               ${x.series?`<span class="tag">${escapeHtml(shortSeries(x.series))}</span>`:''}
               ${x.event?`<span class="tag">${escapeHtml(x.event)}</span>`:''}
             </div>
           </div>`;
-        card.querySelector('.read-toggle').addEventListener('click',()=>{
-          if(state.readSet.has(x.id)) state.readSet.delete(x.id); else state.readSet.add(x.id);
+
+        // kein Full-Render beim Toggle: nur Button/Karte aktualisieren
+        const btn = card.querySelector('.read-toggle');
+        btn.addEventListener('click',()=>{
+          const id = x.id;
+          const wasRead = state.readSet.has(id);
+          if(wasRead) state.readSet.delete(id); else state.readSet.add(id);
           localStorage.setItem('batman-read', JSON.stringify([...state.readSet]));
-          render();
+
+          const nowRead = state.readSet.has(id);
+          btn.classList.toggle('active', nowRead);
+          btn.setAttribute('aria-pressed', nowRead);
+          btn.textContent = nowRead ? 'Gelesen' : 'Ungelesen';
+
+          // Wenn „Nur ungelesene“ aktiv ist und wir gerade auf „gelesen“ schalten → Karte ausblenden
+          if(el.quickHideRead && el.quickHideRead.checked && nowRead){
+            card.remove();
+            // state.view bleibt wie gefiltert; nur Zähler neu
+            updateStats();
+            return;
+          }
+          updateStats();
         });
+
         el.grid.appendChild(card);
       });
+      updateStats();
       el.empty.hidden=state.view.length>0;
-      el.count.textContent=state.view.length;
-
-      const rawIds = new Set(state.raw.map(it => (it.id || `${it.series||''}#${it.issue||''}-${it.title||''}`).toLowerCase().replace(/\s+/g,'_')));
-      const read = [...state.readSet].filter(id => rawIds.has(id)).length;
-      el.readCount.textContent = String(read);
-      const total = state.raw.length || 1;
-      const pct = Math.min(100, Math.round((read/total)*100));
-      el.progress.style.width = pct + '%';
-      el.progress.title = pct + '% abgeschlossen';
     }
 
     function saveFilters(){
