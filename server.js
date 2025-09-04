@@ -8,11 +8,11 @@ const STATUS_FILE = 'read-status.json';
 
 app.use(express.json());
 
-app.get('/read-status', async (req, res) => {
+app.get('/read-status', async (_, res) => {
   try {
     const data = await fs.readFile(STATUS_FILE, 'utf8').catch(() => '[]');
     res.json(JSON.parse(data || '[]'));
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Unable to read status file' });
   }
 });
@@ -25,7 +25,7 @@ app.post('/read-status', async (req, res) => {
   try {
     await fs.writeFile(STATUS_FILE, JSON.stringify(req.body, null, 2));
     res.json({ ok: true });
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Unable to write status file' });
   }
 });
