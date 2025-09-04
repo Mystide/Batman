@@ -23,6 +23,7 @@
     .icon-btn{display:inline-grid; place-items:center; width:38px; height:38px; border-radius:10px; border:1px solid var(--outline); background:#0f1320; color:var(--ink); cursor:pointer}
     .icon-btn:hover{border-color:#2b3346}
 
+    /* Drawer */
     .drawer{position:fixed; inset:0; display:none; z-index:10000}
     .drawer.open{display:block}
     .drawer .shade{position:absolute; inset:0; background:#000; opacity:0; pointer-events:none; transition:opacity .25s ease}
@@ -107,10 +108,6 @@
             <option value="titleDesc">Titel Z–A</option>
           </select>
         </div>
-        <div class="field">
-          <label for="hideRead">Anzeige</label>
-          <label style="display:flex;align-items:center;gap:8px"><input id="hideRead" type="checkbox"> Gelesene ausblenden</label>
-        </div>
         <div class="drawer-actions">
           <button id="mResetFilters" class="ghost-btn danger" style="flex:1">Alle Filter zurücksetzen</button>
           <button id="closeDrawerBtn" class="ghost-btn" style="flex:1">Fertig</button>
@@ -138,12 +135,13 @@
     const el = {
       grid:$('#grid'), empty:$('#empty'),
       mq:$('#mq'), mseries:$('#mseries'), myear:$('#myear'), mevent:$('#mevent'), msort:$('#msort'),
-      hideRead:$('#hideRead'), quickHideRead:$('#quickHideRead'),
+      quickHideRead:$('#quickHideRead'),
       count:$('#count'), readCount:$('#readCount'), progress:$('#progress'),
       openFilters:$('#openFilters'), drawer:$('#drawer'), closeDrawer:$('#closeDrawer'), closeDrawerBtn:$('#closeDrawerBtn'),
       mResetFilters:$('#mResetFilters'), clearSearch:$('#clearSearch')
     };
 
+    // Demo (falls keine JSONs)
     const DEMO_DATA = [
       {id:"batman_year_one", title:"Batman: Year One", issue:"404", year:1987, series:"Batman (1987)", cover:"https://upload.wikimedia.org/wikipedia/en/3/3d/Batman_404.png", event:"Year One", date:"1987-02-01"},
       {id:"killing_joke", title:"The Killing Joke", issue:"One-Shot", year:1988, series:"One-Shot (1988)", cover:"https://upload.wikimedia.org/wikipedia/en/9/9b/Batman_the_killing_joke.jpg", event:"Killing Joke", date:"1988-03-29"},
@@ -200,7 +198,7 @@
       const byYear=new Set(items.map(x=>x.year).filter(Boolean));
       fillSelect(el.mseries,['Alle Serien',...bySeries]);
       fillSelect(el.mevent,['Alle Events',...byEvent]);
-      fillSelect(el.myear,['Alle Jahre',...Array.from(byYear).sort((a,b)=>a-b)]);
+      fillSelect(el.myear,['Alle Jahre',...Array.from(byYear).sort((a,b)=>Number(a)-Number(b))]);
     }
     function fillSelect(sel,items){ sel.innerHTML=items.map((v,i)=>`<option value="${i? v:''}">${v}</option>`).join(''); }
 
@@ -218,20 +216,23 @@
 
       el.mResetFilters?.addEventListener('click',()=>{
         el.mseries.value=''; el.myear.value=''; el.mevent.value=''; el.msort.value='dateAsc';
-        el.mq.value=''; el.hideRead.checked=false; el.quickHideRead.checked=false; apply();
+        el.mq.value=''; if(el.quickHideRead) el.quickHideRead.checked=false; apply();
       });
       el.clearSearch?.addEventListener('click',()=>{ el.mq.value=''; apply(); el.mq.focus(); });
 
-      [el.mq, el.mseries, el.myear, el.mevent, el.msort, el.hideRead]
-        .forEach(c=>c && c.addEventListener('input', ()=>{ syncQuickToggle(); apply(); }));
-      el.quickHideRead?.addEventListener('input', ()=>{ el.hideRead.checked = !!el.quickHideRead.checked; apply(); });
+      [el.mq, el.mseries, el.myear, el.mevent, el.msort]
+        .forEach(c=>c && c.addEventListener('input', apply));
+      el.quickHideRead?.addEventListener('input', apply);
     }
     function drawer(open){ el.drawer.classList.toggle('open',open); document.body.classList.toggle('no-scroll',open); }
 
     function normalize(item){
+      const y = Number(item.year);
+      const year = Number.isFinite(y) ? y : '';
+      const coverUrl = item.cover || item.covers || item.image || item.thumbnail || '';
       const id=(item.id||`${item.series||''}#${item.issue||''}-${item.title||''}`).toLowerCase().replace(/\s+/g,'_');
-      const ts=item.date? new Date(item.date).getTime(): (item.year? new Date(Number(item.year),0,1).getTime():0);
-      return { ...item, id, ts };
+      const ts=item.date? new Date(item.date).getTime(): (year? new Date(year,0,1).getTime():0);
+      return { ...item, id, year, cover: coverUrl, ts };
     }
 
     function formatDateDE(dateRaw, year){
@@ -239,7 +240,7 @@
         const d=new Date(dateRaw);
         if(!isNaN(d)) return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getFullYear()%100).padStart(2,'0')}`;
       }
-      if(year) return `01.01.${String(Number(year)%100).padStart(2,'0')}`;
+      if(year!=='' && year!=null) return `01.01.${String(Number(year)%100).padStart(2,'0')}`;
       return '';
     }
     function shortSeries(s){ const m=/^(.*)\((\d{4})\)\s*$/.exec(String(s||'').trim()); return m ? `${m[1].trim()} ’${String(m[2]).slice(2)}` : (s||''); }
@@ -248,7 +249,7 @@
     function apply(){
       const q=(el.mq.value||'').toLowerCase().trim();
       const fSeries=el.mseries.value; const fYear=el.myear.value; const fEvent=el.mevent.value;
-      const hideRead = !!(el.hideRead && el.hideRead.checked);
+      const hideRead = !!(el.quickHideRead && el.quickHideRead.checked);
 
       let items=state.raw.map(normalize).filter(x=>{
         if(fSeries && x.series!==fSeries) return false;
@@ -271,12 +272,10 @@
 
       state.view=items;
       saveFilters();
-      syncQuickToggle();
       render();
     }
 
     function render(){
-      syncQuickToggle();
       el.grid.innerHTML='';
       state.view.forEach(x=>{
         const isRead = state.readSet.has(x.id);
@@ -294,7 +293,7 @@
           <div class="content">
             <div class="h">${escapeHtml(x.title)}${x.issue?` <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small>`:''}</div>
             <div class="meta">
-              ${x.date?`<span class="tag">${formatDateDE(x.date,x.year)}</span>`:(x.year?`<span class="tag">01.01.${String(Number(x.year)%100).padStart(2,'0')}</span>`:'')}
+              ${x.date?`<span class="tag">${formatDateDE(x.date,x.year)}</span>`:(x.year!==''?`<span class="tag">01.01.${String(Number(x.year)%100).padStart(2,'0')}</span>`:'')}
               ${x.series?`<span class="tag">${escapeHtml(shortSeries(x.series))}</span>`:''}
               ${x.event?`<span class="tag">${escapeHtml(x.event)}</span>`:''}
             </div>
@@ -318,9 +317,22 @@
       el.progress.title = pct + '% abgeschlossen';
     }
 
-    function syncQuickToggle(){ if(el.quickHideRead) el.quickHideRead.checked = !!(el.hideRead && el.hideRead.checked); }
-    function saveFilters(){ const p={ q:el.mq.value||'', series:el.mseries.value||'', year:el.myear.value||'', event:el.mevent.value||'', sort:el.msort.value||'dateAsc', hide:!!(el.hideRead&&el.hideRead.checked) }; try{ localStorage.setItem('bat-filters', JSON.stringify(p)); }catch(e){} }
-    function loadFilters(){ try{ const raw=localStorage.getItem('bat-filters'); if(!raw) return; const p=JSON.parse(raw)||{}; if('q'in p) el.mq.value=p.q||''; if('series'in p) el.mseries.value=p.series||''; if('year'in p) el.myear.value=p.year||''; if('event'in p) el.mevent.value=p.event||''; if('sort'in p) el.msort.value=p.sort||'dateAsc'; if('hide'in p){ el.hideRead.checked=!!p.hide; if(el.quickHideRead) el.quickHideRead.checked=!!p.hide; } }catch(e){} }
+    function saveFilters(){
+      const p={ q:el.mq.value||'', series:el.mseries.value||'', year:el.myear.value||'', event:el.mevent.value||'', sort:el.msort.value||'dateAsc', hide:!!(el.quickHideRead&&el.quickHideRead.checked) };
+      try{ localStorage.setItem('bat-filters', JSON.stringify(p)); }catch(e){}
+    }
+    function loadFilters(){
+      try{
+        const raw=localStorage.getItem('bat-filters'); if(!raw) return;
+        const p=JSON.parse(raw)||{};
+        if('q'in p) el.mq.value=p.q||'';
+        if('series'in p) el.mseries.value=p.series||'';
+        if('year'in p) el.myear.value=p.year||'';
+        if('event'in p) el.mevent.value=p.event||'';
+        if('sort'in p) el.msort.value=p.sort||'dateAsc';
+        if('hide'in p && el.quickHideRead){ el.quickHideRead.checked=!!p.hide; }
+      }catch(e){}
+    }
   </script>
 </body>
 </html>
