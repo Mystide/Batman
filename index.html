@@ -23,7 +23,6 @@
     .icon-btn{display:inline-grid; place-items:center; width:38px; height:38px; border-radius:10px; border:1px solid var(--outline); background:#0f1320; color:var(--ink); cursor:pointer}
     .icon-btn:hover{border-color:#2b3346}
 
-    /* Drawer */
     .drawer{position:fixed; inset:0; display:none; z-index:10000}
     .drawer.open{display:block}
     .drawer .shade{position:absolute; inset:0; background:#000; opacity:0; pointer-events:none; transition:opacity .25s ease}
@@ -63,6 +62,10 @@
     .read-toggle{position:absolute; top:10px; right:10px; z-index:2; padding:6px 10px; border-radius:12px; font-size:12px; font-weight:700; background:rgba(0,0,0,.6); border:1px solid var(--accent-2); color:var(--accent-2)}
     .read-toggle.active{border-color:var(--ok); color:#d9ffef}
 
+    /* Quick toggle style */
+    .quick-toggle{display:flex;align-items:center;gap:8px;border:1px solid var(--outline);background:#0f1320;border-radius:999px;padding:6px 10px;font-size:12px}
+    .quick-toggle input{accent-color:var(--accent)}
+
     @media (min-width: 900px){ .drawer .grid{grid-template-columns:1fr 1fr} }
   </style>
 </head>
@@ -73,7 +76,12 @@
         <div class="logo"><svg viewBox="0 0 64 32"><path d="M32 4c-5 6-11-2-18 0 2 3 2 6 0 9-3-2-7-1-12 2 6 2 10 6 12 12 4-1 7-3 9-6 1 4 3 7 9 7s8-3 9-7c2 3 5 5 9 6 2-6 6-10 12-12-5-3-9-4-12-2-2-3-2-6 0-9-7-2-13 6-18 0z"/></svg></div>
         <div><div class="title">Batman Comic Guide</div><div class="subtitle">Dark, clean & schnell – mit Suche, Filtern & Fortschritt</div></div>
       </div>
-      <button id="openFilters" class="icon-btn" title="Filter & Sortierung">☰</button>
+      <div style="display:flex;align-items:center;gap:10px">
+        <label class="quick-toggle" title="Nur ungelesene anzeigen">
+          <input id="quickHideRead" type="checkbox"> Nur ungelesene
+        </label>
+        <button id="openFilters" class="icon-btn" title="Filter & Sortierung">☰</button>
+      </div>
     </div>
   </header>
 
@@ -130,13 +138,12 @@
     const el = {
       grid:$('#grid'), empty:$('#empty'),
       mq:$('#mq'), mseries:$('#mseries'), myear:$('#myear'), mevent:$('#mevent'), msort:$('#msort'),
-      hideRead:$('#hideRead'),
+      hideRead:$('#hideRead'), quickHideRead:$('#quickHideRead'),
       count:$('#count'), readCount:$('#readCount'), progress:$('#progress'),
       openFilters:$('#openFilters'), drawer:$('#drawer'), closeDrawer:$('#closeDrawer'), closeDrawerBtn:$('#closeDrawerBtn'),
       mResetFilters:$('#mResetFilters'), clearSearch:$('#clearSearch')
     };
 
-    // ein paar Demo-Einträge, wenn keine JSONs gefunden werden
     const DEMO_DATA = [
       {id:"batman_year_one", title:"Batman: Year One", issue:"404", year:1987, series:"Batman (1987)", cover:"https://upload.wikimedia.org/wikipedia/en/3/3d/Batman_404.png", event:"Year One", date:"1987-02-01"},
       {id:"killing_joke", title:"The Killing Joke", issue:"One-Shot", year:1988, series:"One-Shot (1988)", cover:"https://upload.wikimedia.org/wikipedia/en/9/9b/Batman_the_killing_joke.jpg", event:"Killing Joke", date:"1988-03-29"},
@@ -181,6 +188,7 @@
       });
 
       buildFilters();
+      loadFilters();
       bindUI();
       apply();
     }
@@ -200,16 +208,23 @@
       el.openFilters?.addEventListener('click',()=>drawer(true));
       el.closeDrawer?.addEventListener('click',()=>drawer(false));
       el.closeDrawerBtn?.addEventListener('click',()=>drawer(false));
-      window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') drawer(false); });
+
+      window.addEventListener('keydown', (e)=>{
+        if(e.key==='Escape'){
+          if(document.activeElement===el.mq && el.mq.value){ el.mq.value=''; apply(); }
+          else { drawer(false); }
+        }
+      });
 
       el.mResetFilters?.addEventListener('click',()=>{
         el.mseries.value=''; el.myear.value=''; el.mevent.value=''; el.msort.value='dateAsc';
-        el.mq.value=''; el.hideRead.checked=false; apply();
+        el.mq.value=''; el.hideRead.checked=false; el.quickHideRead.checked=false; apply();
       });
-      el.clearSearch?.addEventListener('click',()=>{ el.mq.value=''; apply(); });
+      el.clearSearch?.addEventListener('click',()=>{ el.mq.value=''; apply(); el.mq.focus(); });
 
       [el.mq, el.mseries, el.myear, el.mevent, el.msort, el.hideRead]
-        .forEach(c=>c && c.addEventListener('input', apply));
+        .forEach(c=>c && c.addEventListener('input', ()=>{ syncQuickToggle(); apply(); }));
+      el.quickHideRead?.addEventListener('input', ()=>{ el.hideRead.checked = !!el.quickHideRead.checked; apply(); });
     }
     function drawer(open){ el.drawer.classList.toggle('open',open); document.body.classList.toggle('no-scroll',open); }
 
@@ -255,10 +270,13 @@
       }
 
       state.view=items;
+      saveFilters();
+      syncQuickToggle();
       render();
     }
 
     function render(){
+      syncQuickToggle();
       el.grid.innerHTML='';
       state.view.forEach(x=>{
         const isRead = state.readSet.has(x.id);
@@ -299,6 +317,10 @@
       el.progress.style.width = pct + '%';
       el.progress.title = pct + '% abgeschlossen';
     }
+
+    function syncQuickToggle(){ if(el.quickHideRead) el.quickHideRead.checked = !!(el.hideRead && el.hideRead.checked); }
+    function saveFilters(){ const p={ q:el.mq.value||'', series:el.mseries.value||'', year:el.myear.value||'', event:el.mevent.value||'', sort:el.msort.value||'dateAsc', hide:!!(el.hideRead&&el.hideRead.checked) }; try{ localStorage.setItem('bat-filters', JSON.stringify(p)); }catch(e){} }
+    function loadFilters(){ try{ const raw=localStorage.getItem('bat-filters'); if(!raw) return; const p=JSON.parse(raw)||{}; if('q'in p) el.mq.value=p.q||''; if('series'in p) el.mseries.value=p.series||''; if('year'in p) el.myear.value=p.year||''; if('event'in p) el.mevent.value=p.event||''; if('sort'in p) el.msort.value=p.sort||'dateAsc'; if('hide'in p){ el.hideRead.checked=!!p.hide; if(el.quickHideRead) el.quickHideRead.checked=!!p.hide; } }catch(e){} }
   </script>
 </body>
 </html>
