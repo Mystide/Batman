@@ -16,10 +16,13 @@ const el = {
 
 const collator = new Intl.Collator('de', {numeric:true, sensitivity:'base'});
 
+const SERVER_URL = (typeof process !== 'undefined' && process.env.SERVER_URL) ||
+  config.SERVER_URL || 'https://meinserver.example:3000';
+
 init();
 async function init(){
     try {
-    const res = await fetch('/read-status');
+    const res = await fetch(`${SERVER_URL}/read-status`);
     if (res.ok) {
       const list = await res.json();
       state.readSet = new Set(list);
