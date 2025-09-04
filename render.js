@@ -1,7 +1,7 @@
 import { formatDateDE, shortSeries, escapeHtml } from './api.js';
 import config from './config.json' assert { type: 'json' };
 
-const AUTH_TOKEN = 'mysecrettoken';
+const AUTH_TOKEN = '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';
 
 const SERVER_URL =
   (typeof process !== 'undefined' && process.env.SERVER_URL) ||
