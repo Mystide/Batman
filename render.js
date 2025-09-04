@@ -1,12 +1,7 @@
 import { formatDateDE, shortSeries, escapeHtml } from './api.js';
-import config from './config.json' assert { type: 'json' };
 
-const AUTH_TOKEN = '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';
-
-const SERVER_URL =
-  (typeof process !== 'undefined' && process.env.SERVER_URL) ||
-  config.SERVER_URL ||
-  'https://meinserver.example:3000';
+const GIST_ID = 'your-gist-id';
+const FILE = 'batman-status.json';
 
 export function updateStats(state, el) {
   const rawIds = new Set(
@@ -38,7 +33,7 @@ export function render(state, el) {
           x.cover
             ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" decoding="async"
                  src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer"
-                 onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\\\\'tag\\\\' style=\\\\'opacity:.7\\\\'>Kein Cover</div>');">`
+                 onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\'tag\' style=\'opacity:.7\'>Kein Cover</div>');">`
             : '<div class="tag" style="opacity:.7">Kein Cover</div>'
         }
       </div>
@@ -59,13 +54,16 @@ export function render(state, el) {
       else state.readSet.add(id);
 
       const payload = [...state.readSet];
-      fetch(`${SERVER_URL}/read-status`, {
-        method: 'POST',
+      const token = localStorage.getItem('gistToken');
+      fetch(`https://api.github.com/gists/${GIST_ID}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${AUTH_TOKEN}`
+          Authorization: `token ${token}`
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          files: { [FILE]: { content: JSON.stringify(payload) } }
+        })
       })
         .then(res => {
           if (!res.ok) throw new Error('Failed');
