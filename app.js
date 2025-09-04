@@ -1,6 +1,5 @@
 import { loadData } from './api.js';
 import { buildFilters, bindUI, loadFilters, apply } from './filters.js';
-import config from './config.json' assert { type: 'json' };
 
 const $ = sel => document.querySelector(sel);
 
@@ -16,25 +15,29 @@ const el = {
 
 const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
 
-const SERVER_URL =
-  (typeof process !== 'undefined' && process.env.SERVER_URL) ||
-  config.SERVER_URL ||
-  'https://meinserver.example:3000';
+const GIST_ID = 'your-gist-id';
+const FILE = 'batman-status.json';
 
 init();
 
 async function init() {
   try {
-    const res = await fetch(`${SERVER_URL}/read-status`);
+    const token = localStorage.getItem('gistToken');
+    const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      headers: { Authorization: `token ${token}` }
+    });
     if (res.ok) {
-      const list = await res.json();
+      const json = await res.json();
+      const list = JSON.parse(json.files[FILE].content || '[]');
       state.readSet = new Set(list);
       localStorage.setItem('batman-read', JSON.stringify(list));
     } else {
       throw new Error('Request failed');
     }
   } catch {
-    state.readSet = new Set(JSON.parse(localStorage.getItem('batman-read') || '[]'));
+    state.readSet = new Set(
+      JSON.parse(localStorage.getItem('batman-read') || '[]')
+    );
   }
 
   state.raw = await loadData();
