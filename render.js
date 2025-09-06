@@ -34,19 +34,19 @@ export function render(state, el) {
             : '<div class="tag" style="opacity:.7">Kein Cover</div>'
         }
       </div>
-      <div class="content">
-        <div class="h">${escapeHtml(x.title)}${x.issue ? ` <small class="issue-num">#${escapeHtml(x.issue)}</small>` : ''}</div>
-        <div class="meta">
-          ${formattedDate ? `<div class="meta-row"><b>Datum:</b> ${formattedDate}</div>` : ''}
-          ${x.series ? `<div class="meta-row"><b>Serie:</b><span>${escapeHtml(shortSeries(x.series))}</span></div>` : ''}
-          ${x.event ? `<div class="meta-row"><b>Event:</b> ${escapeHtml(x.event)}</div>` : ''}
+        <div class="content">
+          <div class="h">${escapeHtml(x.title)}${x.issue ? ` <small class="issue-num">#${escapeHtml(x.issue)}</small>` : ''}</div>
+          <div class="meta">
+            ${formattedDate ? `<div class="meta-row"><b>Datum:</b> ${formattedDate}</div>` : ''}
+            ${x.series ? `<div class="meta-row"><b>Serie:</b><span>${escapeHtml(shortSeries(x.series))}</span></div>` : ''}
+            ${x.event ? `<div class="meta-row"><b>Event:</b> ${escapeHtml(x.event)}</div>` : ''}
+          </div>
           ${
-            (x.dcui || x.dcui_link)
-              ? `<div class="meta-row"><b>DCUI:</b> <a href="${escapeHtml(x.dcui || x.dcui_link)}" target="_blank" rel="noopener noreferrer">Link</a></div>`
+            x.dcui
+              ? `<a class="dcui-link" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener noreferrer"><img src="dcui.svg" alt="DCUI Logo"></a>`
               : ''
           }
-        </div>
-      </div>`;
+        </div>`;
 
     const btn = card.querySelector('.read-toggle');
     btn.addEventListener('click', () => {
