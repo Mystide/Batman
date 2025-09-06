@@ -1,27 +1,29 @@
-import { normalize } from './api.js';
 import { render } from './render.js';
 
 export function buildFilters(state, el){
-  const items = state.raw.map(normalize);
+  const items = state.items;
   const bySeries=new Set(items.map(x=>x.series).filter(Boolean));
   const byEvent=new Set(items.map(x=>x.event).filter(Boolean));
   const byYear=new Set(items.map(x=>x.year).filter(y=> y!=='' && !Number.isNaN(Number(y))));
+  const byChar=new Set(items.flatMap(x=>x.characters||[]));
   fillSelect(el.mseries,['Alle Serien',...bySeries]);
   fillSelect(el.mevent,['Alle Events',...byEvent]);
   fillSelect(el.myear,['Alle Jahre',...Array.from(byYear).map(Number).sort((a,b)=>a-b).map(String)]);
+  if(el.mchar) fillSelect(el.mchar,['Alle Figuren',...Array.from(byChar).sort()]);
 }
 
 function fillSelect(sel,items){ sel.innerHTML=items.map((v,i)=>`<option value="${i? v:''}">${v}</option>`).join(''); }
 
 export function apply(state, el, collator){
   const q=(el.mq.value||'').toLowerCase().trim();
-  const fSeries=el.mseries.value; const fYear=el.myear.value; const fEvent=el.mevent.value;
+  const fSeries=el.mseries.value; const fYear=el.myear.value; const fEvent=el.mevent.value; const fChar=el.mchar?el.mchar.value:'';
   const hideRead = !!(el.quickHideRead && el.quickHideRead.checked);
 
-  let items=state.raw.map(normalize).filter(x=>{
+  let items=state.items.filter(x=>{
     if(fSeries && x.series!==fSeries) return false;
     if(fYear && String(x.year)!==String(fYear)) return false;
     if(fEvent && x.event!==fEvent) return false;
+    if(fChar && !(x.characters||[]).includes(fChar)) return false;
     if(hideRead && state.readSet.has(x.id)) return false;
     if(q){
       const hay=`${x.title} ${x.series} ${x.event}`.toLowerCase();
@@ -55,12 +57,12 @@ export function bindUI(el, applyFn){
   });
 
   el.mResetFilters?.addEventListener('click',()=>{
-    el.mseries.value=''; el.myear.value=''; el.mevent.value=''; el.msort.value='dateAsc';
+    el.mseries.value=''; el.myear.value=''; el.mevent.value=''; if(el.mchar) el.mchar.value=''; el.msort.value='dateAsc';
     el.mq.value=''; if(el.quickHideRead) el.quickHideRead.checked=false; applyFn();
   });
   el.clearSearch?.addEventListener('click',()=>{ el.mq.value=''; applyFn(); el.mq.focus(); });
 
-  [el.mq, el.mseries, el.myear, el.mevent, el.msort]
+  [el.mq, el.mseries, el.myear, el.mevent, el.mchar, el.msort]
     .forEach(c=>c && c.addEventListener('input', applyFn));
   el.quickHideRead?.addEventListener('input', applyFn);
 }
@@ -68,7 +70,7 @@ export function bindUI(el, applyFn){
 function drawer(el, open){ el.drawer.classList.toggle('open',open); document.body.classList.toggle('no-scroll',open); }
 
 export function saveFilters(el){
-  const p={ q:el.mq.value||'', series:el.mseries.value||'', year:el.myear.value||'', event:el.mevent.value||'', sort:el.msort.value||'dateAsc', hide:!!(el.quickHideRead&&el.quickHideRead.checked) };
+  const p={ q:el.mq.value||'', series:el.mseries.value||'', year:el.myear.value||'', event:el.mevent.value||'', char:el.mchar?el.mchar.value:'', sort:el.msort.value||'dateAsc', hide:!!(el.quickHideRead&&el.quickHideRead.checked) };
   try{ localStorage.setItem('bat-filters', JSON.stringify(p)); }catch(e){}
 }
 
@@ -80,6 +82,7 @@ export function loadFilters(el){
     if('series'in p) el.mseries.value=p.series||'';
     if('year'in p) el.myear.value=p.year||'';
     if('event'in p) el.mevent.value=p.event||'';
+    if('char'in p && el.mchar) el.mchar.value=p.char||'';
     if('sort'in p) el.msort.value=p.sort||'dateAsc';
     if('hide'in p && el.quickHideRead){ el.quickHideRead.checked=!!p.hide; }
   }catch(e){}
