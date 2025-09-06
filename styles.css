@@ -50,6 +50,7 @@ header{position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8p
 
 main{padding:8px 24px 40px}
 .grid{display:grid; gap:14px}
+#grid{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
 
 .card{position:relative; border:1px solid var(--outline); background:#101521; border-radius:16px; overflow:hidden}
 .cover-wrap{position:relative; aspect-ratio:3/4.2; display:block; background:#0c0f16; border-bottom:1px solid var(--outline)}
@@ -68,20 +69,10 @@ main{padding:8px 24px 40px}
 .quick-toggle{display:flex;align-items:center;gap:8px;border:1px solid var(--outline);background:#0f1320;border-radius:999px;padding:6px 10px;font-size:12px}
 .quick-toggle input{accent-color:var(--accent)}
 
-/* Responsive breakpoints */
+/* Responsive adjustments */
 @media (max-width:640px){
-  #grid{grid-template-columns:1fr}
   .logo{width:32px;height:32px}
   .title{font-size:18px}
 }
-@media (min-width:641px) and (max-width:1024px){
-  #grid{grid-template-columns:repeat(2,1fr)}
-}
-@media (min-width:1025px){
-  #grid{grid-template-columns:repeat(3,1fr)}
-}
-#grid.cols-1{grid-template-columns:1fr}
-#grid.cols-2{grid-template-columns:repeat(2,1fr)}
-#grid.cols-3{grid-template-columns:repeat(3,1fr)}
 
 @media (min-width: 900px){ .drawer .grid{grid-template-columns:1fr 1fr} }
