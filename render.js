@@ -6,16 +6,10 @@ const FILE = 'readStatus.json';
 const LS_KEY = 'comic-tracker-read';
 
 export function updateStats(state, el) {
-  const rawIds = new Set(
-    state.raw.map(it =>
-      (it.id || `${it.series || ''}#${it.issue || ''}-${it.title || ''}`)
-        .toLowerCase()
-        .replace(/\s+/g, '_')
-    )
-  );
+  const rawIds = state.idSet;
   const read = [...state.readSet].filter(id => rawIds.has(id)).length;
   el.readCount.textContent = String(read);
-  const total = state.raw.length || 1;
+  const total = state.items.length || 1;
   const pct = Math.min(100, Math.round((read / total) * 100));
   el.progress.style.width = pct + '%';
   el.progress.title = pct + '% abgeschlossen';
@@ -26,6 +20,7 @@ export function render(state, el) {
   el.grid.innerHTML = '';
   state.view.forEach(x => {
     const isRead = state.readSet.has(x.id);
+    const formattedDate = formatDateDE(x.dateRaw, x.year);
     const card = document.createElement('article');
     card.className = 'card';
     card.innerHTML = `
@@ -40,9 +35,9 @@ export function render(state, el) {
         }
       </div>
       <div class="content">
-        <div class="h">${escapeHtml(x.title)}${x.issue ? ` <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small>` : ''}</div>
+        <div class="h">${escapeHtml(x.title)}${x.issue ? ` <small class="issue-num">#${escapeHtml(x.issue)}</small>` : ''}</div>
         <div class="meta">
-          ${formatDateDE(x.dateRaw, x.year) ? `<div class="meta-row"><b>Datum:</b> ${formatDateDE(x.dateRaw, x.year)}</div>` : ''}
+          ${formattedDate ? `<div class="meta-row"><b>Datum:</b> ${formattedDate}</div>` : ''}
           ${x.series ? `<div class="meta-row"><b>Serie:</b><span>${escapeHtml(shortSeries(x.series))}</span></div>` : ''}
           ${x.event ? `<div class="meta-row"><b>Event:</b> ${escapeHtml(x.event)}</div>` : ''}
         </div>
