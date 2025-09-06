@@ -29,6 +29,7 @@ async function init() {
       throw new Error('Missing token');
     }
     const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      cache: 'no-store',
       headers: { Authorization: `token ${token}` }
     });
     if (res.ok) {
