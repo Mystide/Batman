@@ -1,3 +1,4 @@
+// api.js
 export const DATA_LIST_URL = './data/list.json';
 export const DATA_FALLBACK_URL = './comics.json';
 
@@ -54,16 +55,17 @@ export function extractYearFromSeries(series){
 }
 
 export function normalize(item){
-  const dateRaw = firstOf(item.date, item.release_date, item.publication_date, item.published);
-  let year = Number(item.year);
+  const { dcui_link, dcui, ...rest } = item;
+  const dateRaw = firstOf(rest.date, rest.release_date, rest.publication_date, rest.published);
+  let year = Number(rest.year);
   if(!Number.isFinite(year)){
     const d = new Date(dateRaw||'');
-    year = !isNaN(d) ? d.getFullYear() : extractYearFromSeries(item.series);
+    year = !isNaN(d) ? d.getFullYear() : extractYearFromSeries(rest.series);
   }
-  const coverUrl = firstOf(item.cover, item.covers, item.image, item.thumbnail);
-  const id=(item.id||`${item.series||''}#${item.issue||''}-${item.title||''}`).toLowerCase().replace(/\s+/g,'_');
+  const coverUrl = firstOf(rest.cover, rest.covers, rest.image, rest.thumbnail);
+  const id=(rest.id||`${rest.series||''}#${rest.issue||''}-${rest.title||''}`).toLowerCase().replace(/\s+/g,'_');
   const ts = dateRaw ? new Date(dateRaw).getTime() : (Number.isFinite(year) ? new Date(year,0,1).getTime() : 0);
-  return { ...item, id, year: Number.isFinite(year)?year:'', dateRaw, cover: coverUrl, ts };
+  return { ...rest, dcui: firstOf(dcui, dcui_link), id, year: Number.isFinite(year)?year:'', dateRaw, cover: coverUrl, ts };
 }
 
 export function formatDateDE(dateRaw, year){
