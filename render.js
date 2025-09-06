@@ -43,7 +43,7 @@ export function render(state, el) {
           </div>
           ${
             x.dcui
-              ? `<a class="dcui-link" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener noreferrer"><img src="dcui.svg" alt="DCUI Logo"></a>`
+              ? `<a class="dcui-link" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener noreferrer"><img src="dc-logo.png" alt="DC Logo"></a>`
               : ''
           }
         </div>`;
