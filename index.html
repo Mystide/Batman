@@ -8,21 +8,47 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="tokenWarning" hidden>Kein Token gesetzt. <a href="#" id="tokenLink">Token eingeben</a>.</div>
+  <div id="tokenWarning" hidden>Kein Token gesetzt. <a href="#" id="tokenLink">Token eingeben</a>.</div>
   <header>
     <div class="head container">
       <div class="brand">
         <div class="logo"><svg viewBox="0 0 64 32"><path d="M32 4c-5 6-11-2-18 0 2 3 2 6 0 9-3-2-7-1-12 2 6 2 10 6 12 12 4-1 7-3 9-6 1 4 3 7 9 7s8-3 9-7c2 3 5 5 9 6 2-6 6-10 12-12-5-3-9-4-12-2-2-3-2-6 0-9-7-2-13 6-18 0z"/></svg></div>
-        <div><div class="title">Batman Comic Guide</div><div class="subtitle">Dark, clean & schnell – mit Suche, Filtern & Fortschritt</div></div>
+        <div>
+          <div class="title">Batman Comic Guide</div>
+          <div class="subtitle">Dark, clean & schnell – mit Suche, Filtern & Fortschritt</div>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
+      <div class="actions">
         <label class="quick-toggle" title="Nur ungelesene anzeigen">
           <input id="quickHideRead" type="checkbox"> Nur ungelesene
         </label>
-        <button id="openFilters" class="icon-btn" title="Filter & Sortierung">☰</button>
+        <button id="openNav" class="icon-btn" aria-label="Menü">☰</button>
+        <button id="openFilters" class="icon-btn" aria-label="Filter">⚙</button>
       </div>
     </div>
   </header>
+
+  <div id="navDrawer" class="drawer" aria-hidden="true">
+    <div class="shade" id="closeNav"></div>
+    <aside class="panel" role="dialog" aria-modal="true">
+      <h3>Menü</h3>
+      <nav class="nav-list">
+        <a href="#">Start</a>
+        <a href="#">Über</a>
+      </nav>
+      <div class="field">
+        <label for="layoutCols">Spalten</label>
+        <select id="layoutCols">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+      </div>
+      <div class="drawer-actions">
+        <button id="closeNavBtn" class="ghost-btn" style="flex:1">Schließen</button>
+      </div>
+    </aside>
+  </div>
 
   <div id="drawer" class="drawer" aria-hidden="true">
     <div class="shade" id="closeDrawer"></div>
@@ -53,7 +79,7 @@
       </div>
     </aside>
   </div>
-  
+
  <dialog id="tokenDialog">
     <form id="tokenForm">
       <label for="tokenInput">GitHub Token</label>
