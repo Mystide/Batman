@@ -10,12 +10,13 @@ const el = {
   quickHideRead: $('#quickHideRead'),
   count: $('#count'), readCount: $('#readCount'), progress: $('#progress'),
   openFilters: $('#openFilters'), drawer: $('#drawer'), closeDrawer: $('#closeDrawer'), closeDrawerBtn: $('#closeDrawerBtn'),
-  mResetFilters: $('#mResetFilters'), clearSearch: $('#clearSearch')
+  mResetFilters: $('#mResetFilters'), clearSearch: $('#clearSearch'),
+  tokenWarning: $('#tokenWarning'), tokenLink: $('#tokenLink'),
+  tokenDialog: $('#tokenDialog'), tokenForm: $('#tokenForm'), tokenInput: $('#tokenInput')
 };
 
 const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
-
-const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28;
+const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28';
 const FILE = 'readStatus.json';
 
 init();
@@ -23,6 +24,10 @@ init();
 async function init() {
   try {
     const token = localStorage.getItem('gistToken');
+    if (!token) {
+      showTokenNotice();
+      throw new Error('Missing token');
+    }
     const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
       headers: { Authorization: `token ${token}` }
     });
@@ -31,6 +36,9 @@ async function init() {
       const list = JSON.parse(json.files[FILE].content || '[]');
       state.readSet = new Set(list);
       localStorage.setItem('batman-read', JSON.stringify(list));
+      } else if (res.status === 401 || res.status === 403) {
+      showTokenNotice();
+      throw new Error('Unauthorized');
     } else {
       throw new Error('Request failed');
     }
@@ -47,3 +55,22 @@ async function init() {
   bindUI(el, applyFn);
   applyFn();
 }
+
+function showTokenNotice() {
+  el.tokenWarning.hidden = false;
+}
+
+el.tokenLink.addEventListener('click', e => {
+  e.preventDefault();
+  el.tokenDialog.showModal();
+});
+
+el.tokenForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const token = el.tokenInput.value.trim();
+  if (token) {
+    localStorage.setItem('gistToken', token);
+    el.tokenDialog.close();
+    location.reload();
+  }
+});
