@@ -1,7 +1,6 @@
-:root{ --bg:#0b0d12; --bg-soft:#11141b; --ink:#e7ecf3; --muted:#9aa4b2; --accent:#f1c40f; --accent-2:#ffd761; --outline:#1c2230;
- --ok:#31c48d; --danger:#f05252; }
+:root{ --bg:#0b0d12; --bg-soft:#11141b; --ink:#e7ecf3; --muted:#9aa4b2; --accent:#f1c40f; --accent-2:#ffd761; --outline:#1c2230; --ok:#31c48d; --danger:#f05252; }
 html,body{height:100%}
-body{margin:0; background:linear-gradient(180deg, #0a0c11 0%, #080a0f 100%); color:var(--ink); font:15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;}
+body{margin:0; background:linear-gradient(180deg, #0a0c11 0%, #080a0f 100%); color:var(--ink); font:15px/1.5 "Montserrat","Roboto",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial;}
 .no-scroll{overflow:hidden}
 .container{max-width:1200px; margin:0 auto; padding:24px;}
 
@@ -15,6 +14,7 @@ header{position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8p
 .logo svg{width:28px; height:28px; fill:var(--accent)}
 .title{font-size:20px; font-weight:700}
 .subtitle{color:var(--muted); font-size:13px}
+.actions{display:flex;align-items:center;gap:10px}
 
 .icon-btn{display:inline-grid; place-items:center; width:38px; height:38px; border-radius:10px; border:1px solid var(--outline); background:#0f1320; color:var(--ink); cursor:pointer}
 .icon-btn:hover{border-color:#2b3346}
@@ -38,17 +38,22 @@ header{position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8p
 .ghost-btn{background:#0f1320; color:var(--ink); border:1px solid var(--outline); border-radius:10px; padding:10px 12px; cursor:pointer; font-size:13px}
 .ghost-btn.danger{color:#ffd1d1; border-color:#5b2a2a; background:#1a0f0f}
 
+/* Navigation list inside drawer */
+.nav-list{display:flex;flex-direction:column;gap:8px;margin:0 0 16px;padding:0;list-style:none}
+.nav-list a{color:var(--ink);text-decoration:none;padding:8px 0;border-bottom:1px solid var(--outline)}
+.nav-list a:hover{color:var(--accent)}
+
 .stats{display:flex; gap:14px; align-items:center; flex-wrap:wrap; color:var(--muted); padding:2px 24px 16px}
-.badge{display:inline-flex; gap:6px; align-items:center; background:#0f1320; border:1px solid var(--outline); padding:6px 10px; border-radius:999px; font-size:12px}
+.badge{display:inline-flex; gap:6px; align-items:center; background:#0f1320; border:1px solid var(--outline); padding:6px 10px;border-radius:999px; font-size:12px}
 .bar{flex:1; height:10px; background:#0f1320; border:1px solid var(--outline); border-radius:999px; overflow:hidden}
 .bar>i{display:block; height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2))}
 
 main{padding:8px 24px 40px}
-.grid{display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.grid{display:grid; gap:14px}
 
 .card{position:relative; border:1px solid var(--outline); background:#101521; border-radius:16px; overflow:hidden}
 .cover-wrap{position:relative; aspect-ratio:3/4.2; display:block; background:#0c0f16; border-bottom:1px solid var(--outline)}
-.cover-wrap::after{content:""; position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.1050%, rgba(0,0,0,0) 80%); pointer-events:none; z-index:1}
+.cover-wrap::after{content:""; position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.10) 50%, rgba(0,0,0,0) 80%); pointer-events:none; z-index:1}
 .cover{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0}
 
 .content{padding:10px 12px 12px; display:grid; gap:8px}
@@ -62,5 +67,21 @@ main{padding:8px 24px 40px}
 /* Quick toggle style */
 .quick-toggle{display:flex;align-items:center;gap:8px;border:1px solid var(--outline);background:#0f1320;border-radius:999px;padding:6px 10px;font-size:12px}
 .quick-toggle input{accent-color:var(--accent)}
+
+/* Responsive breakpoints */
+@media (max-width:640px){
+  #grid{grid-template-columns:1fr}
+  .logo{width:32px;height:32px}
+  .title{font-size:18px}
+}
+@media (min-width:641px) and (max-width:1024px){
+  #grid{grid-template-columns:repeat(2,1fr)}
+}
+@media (min-width:1025px){
+  #grid{grid-template-columns:repeat(3,1fr)}
+}
+#grid.cols-1{grid-template-columns:1fr}
+#grid.cols-2{grid-template-columns:repeat(2,1fr)}
+#grid.cols-3{grid-template-columns:repeat(3,1fr)}
 
 @media (min-width: 900px){ .drawer .grid{grid-template-columns:1fr 1fr} }
