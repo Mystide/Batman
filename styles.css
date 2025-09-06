@@ -54,7 +54,7 @@ main{padding:8px 24px 40px}
 .content{padding:10px 12px 12px; display:grid; gap:8px}
 .h{font-weight:700; font-size:14px}
 .meta{display:grid; gap:4px; color:var(--muted); font-size:12px}
-.meta-row{display:flex; gap:4px; flex-wrap:wrap}
+.meta-row{display:flex; gap:4px; flex-wrap:nowrap}
 .meta-row b{color:var(--ink)}
 .tag{border:1px solid var(--outline); padding:2px 8px; border-radius:999px}
 
