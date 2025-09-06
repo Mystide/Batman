@@ -1,4 +1,5 @@
-:root{ --bg:#0b0d12; --bg-soft:#11141b; --ink:#e7ecf3; --muted:#9aa4b2; --accent:#f1c40f; --accent-2:#ffd761; --outline:#1c2230; --ok:#31c48d; --danger:#f05252; }
+:root{ --bg:#0b0d12; --bg-soft:#11141b; --ink:#e7ecf3; --muted:#9aa4b2; --accent:#f1c40f; --accent-2:#ffd761; --outline:#1c2230;
+ --ok:#31c48d; --danger:#f05252; }
 html,body{height:100%}
 body{margin:0; background:linear-gradient(180deg, #0a0c11 0%, #080a0f 100%); color:var(--ink); font:15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;}
 .no-scroll{overflow:hidden}
@@ -28,7 +29,7 @@ header{position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8p
 .field label{color:var(--muted); font-size:12px; display:block; margin-bottom:6px}
 .field input,.field select{background:var(--bg-soft); color:var(--ink); border:1px solid var(--outline); border-radius:12px; padding:10px 36px 10px 12px; outline:none; width:100%}
 .field.span-2{grid-column:1 / -1}
-.clear-btn{position:absolute; right:8px; top:28px; width:22px; height:22px; border:1px solid var(--outline); border-radius:50%; background:#0f1320; color:#ccc; cursor:pointer; display:none; line-height:20px}
+.clear-btn{position:absolute; right:8px; top:28px; width:22px; height:22px; border:1px solid var(--outline); border-radius:50%;background:#0f1320; color:#ccc; cursor:pointer; display:none; line-height:20px}
 .field input:not(:placeholder-shown) + .clear-btn{display:block}
 .drawer-actions{display:flex; gap:8px}
 .ghost-btn{background:#0f1320; color:var(--ink); border:1px solid var(--outline); border-radius:10px; padding:10px 12px; cursor:pointer; font-size:13px}
@@ -44,7 +45,7 @@ main{padding:8px 24px 40px}
 
 .card{position:relative; border:1px solid var(--outline); background:#101521; border-radius:16px; overflow:hidden}
 .cover-wrap{position:relative; aspect-ratio:3/4.2; display:block; background:#0c0f16; border-bottom:1px solid var(--outline)}
-.cover-wrap::after{content:""; position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.10) 50%, rgba(0,0,0,0) 80%); pointer-events:none; z-index:1}
+.cover-wrap::after{content:""; position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.1050%, rgba(0,0,0,0) 80%); pointer-events:none; z-index:1}
 .cover{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0}
 
 .content{padding:10px 12px 12px; display:grid; gap:8px}
