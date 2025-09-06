@@ -1,12 +1,12 @@
-import { loadData } from './api.js';
+import { loadData, normalize } from './api.js';
 import { buildFilters, bindUI, loadFilters, apply } from './filters.js';
 
 const $ = sel => document.querySelector(sel);
 
-const state = { raw: [], view: [], readSet: new Set() };
+const state = { raw: [], items: [], view: [], readSet: new Set(), idSet: new Set() };
 const el = {
   grid: $('#grid'), empty: $('#empty'),
-  mq: $('#mq'), mseries: $('#mseries'), myear: $('#myear'), mevent: $('#mevent'), msort: $('#msort'),
+  mq: $('#mq'), mseries: $('#mseries'), myear: $('#myear'), mevent: $('#mevent'), mchar: $('#mchar'), msort: $('#msort'),
   quickHideRead: $('#quickHideRead'),
   count: $('#count'), readCount: $('#readCount'), progress: $('#progress'),
   openFilters: $('#openFilters'), drawer: $('#drawer'), closeDrawer: $('#closeDrawer'), closeDrawerBtn: $('#closeDrawerBtn'),
@@ -51,6 +51,8 @@ async function init() {
   }
 
   state.raw = await loadData();
+  state.items = state.raw.map(normalize);
+  state.idSet = new Set(state.items.map(x => x.id));
   buildFilters(state, el);
   loadFilters(el);
   const applyFn = () => apply(state, el, collator);
