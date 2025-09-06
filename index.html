@@ -22,37 +22,19 @@
         <label class="quick-toggle" title="Nur ungelesene anzeigen">
           <input id="quickHideRead" type="checkbox"> Nur ungelesene
         </label>
-        <button id="openNav" class="icon-btn" aria-label="Menü">☰</button>
-        <button id="openFilters" class="icon-btn" aria-label="Filter">⚙</button>
+        <button id="openFilters" class="icon-btn" aria-label="Menü">☰</button>
       </div>
     </div>
   </header>
 
-  <div id="navDrawer" class="drawer" aria-hidden="true">
-    <div class="shade" id="closeNav"></div>
+  <div id="drawer" class="drawer" aria-hidden="true">
+    <div class="shade" id="closeDrawer"></div>
     <aside class="panel" role="dialog" aria-modal="true">
       <h3>Menü</h3>
       <nav class="nav-list">
         <a href="#">Start</a>
         <a href="#">Über</a>
       </nav>
-      <div class="field">
-        <label for="layoutCols">Spalten</label>
-        <select id="layoutCols">
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-        </select>
-      </div>
-      <div class="drawer-actions">
-        <button id="closeNavBtn" class="ghost-btn" style="flex:1">Schließen</button>
-      </div>
-    </aside>
-  </div>
-
-  <div id="drawer" class="drawer" aria-hidden="true">
-    <div class="shade" id="closeDrawer"></div>
-    <aside class="panel" role="dialog" aria-modal="true">
       <h3>Suche & Filter</h3>
       <div class="grid">
         <div class="field span-2">
