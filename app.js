@@ -18,6 +18,7 @@ const el = {
 const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
 const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28';
 const FILE = 'readStatus.json';
+const LS_KEY = 'comic-tracker-read';
 
 init();
 
@@ -36,7 +37,7 @@ async function init() {
       const json = await res.json();
       const list = JSON.parse(json.files[FILE].content || '[]');
       state.readSet = new Set(list);
-      localStorage.setItem('batman-read', JSON.stringify(list));
+      localStorage.setItem(LS_KEY, JSON.stringify(list));
     } else if (res.status === 401 || res.status === 403) {
       showTokenNotice();
       throw new Error('Unauthorized');
@@ -45,7 +46,7 @@ async function init() {
     }
   } catch {
     state.readSet = new Set(
-      JSON.parse(localStorage.getItem('batman-read') || '[]')
+      JSON.parse(localStorage.getItem(LS_KEY) || '[]')
     );
   }
 
