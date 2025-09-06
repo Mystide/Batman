@@ -42,7 +42,7 @@ export function render(state, el) {
         <div class="h">${escapeHtml(x.title)}${x.issue ? ` <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small>` : ''}</div>
         <div class="meta">
           ${formatDateDE(x.dateRaw, x.year) ? `<div class="meta-row"><b>Datum:</b> ${formatDateDE(x.dateRaw, x.year)}</div>` : ''}
-          ${x.series ? `<div class="meta-row"><b>Serie:</b> ${escapeHtml(shortSeries(x.series))}</div>` : ''}
+          ${x.series ? `<div class="meta-row"><b>Serie:</b><span>${escapeHtml(shortSeries(x.series))}</span></div>` : ''}
           ${x.event ? `<div class="meta-row"><b>Event:</b> ${escapeHtml(x.event)}</div>` : ''}
         </div>
       </div>`;
