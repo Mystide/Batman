@@ -10,37 +10,19 @@ const el = {
   quickHideRead: $('#quickHideRead'),
   count: $('#count'), readCount: $('#readCount'), progress: $('#progress'),
   openFilters: $('#openFilters'), drawer: $('#drawer'), closeDrawer: $('#closeDrawer'), closeDrawerBtn: $('#closeDrawerBtn'),
-  mResetFilters: $('#mResetFilters'), clearSearch: $('#clearSearch'),
-  tokenDialog: $('#tokenDialog'), tokenForm: $('#tokenForm'), tokenInput: $('#tokenInput')
+  mResetFilters: $('#mResetFilters'), clearSearch: $('#clearSearch')
 };
 
 const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
 
-const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28';
+const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28;
 const FILE = 'readStatus.json';
 
 init();
 
 async function init() {
-   let token = localStorage.getItem('gistToken');
-  if (!token) {
-    el.tokenDialog.showModal();
-    el.tokenForm.addEventListener(
-      'submit',
-      e => {
-        e.preventDefault();
-        const val = el.tokenInput.value.trim();
-        if (val) {
-          localStorage.setItem('gistToken', val);
-          el.tokenDialog.close();
-          init();
-        }
-      },
-      { once: true }
-    );
-    return;
-  }
   try {
+    const token = localStorage.getItem('gistToken');
     const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
       headers: { Authorization: `token ${token}` }
     });
