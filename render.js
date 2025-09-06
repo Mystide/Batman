@@ -1,3 +1,4 @@
+// render.js
 import { formatDateDE, shortSeries, escapeHtml } from './api.js';
 
 const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28';
