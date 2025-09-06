@@ -2,6 +2,7 @@ import { formatDateDE, shortSeries, escapeHtml } from './api.js';
 
 const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28';
 const FILE = 'readStatus.json';
+const LS_KEY = 'comic-tracker-read';
 
 export function updateStats(state, el) {
   const rawIds = new Set(
@@ -33,16 +34,16 @@ export function render(state, el) {
           x.cover
             ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" decoding="async"
                  src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer"
-                 onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\'tag\' style=\'opacity:.7\'>Kein Cover</div>');">`
+                 onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\\'tag\\' style=\\'opacity:.7\\'>Kein Cover</div>');">`
             : '<div class="tag" style="opacity:.7">Kein Cover</div>'
         }
       </div>
       <div class="content">
         <div class="h">${escapeHtml(x.title)}${x.issue ? ` <small style="color:var(--muted)">#${escapeHtml(x.issue)}</small>` : ''}</div>
         <div class="meta">
-          ${formatDateDE(x.dateRaw, x.year) ? `<span class="tag">${formatDateDE(x.dateRaw, x.year)}</span>` : ''}
-          ${x.series ? `<span class="tag">${escapeHtml(shortSeries(x.series))}</span>` : ''}
-          ${x.event ? `<span class="tag">${escapeHtml(x.event)}</span>` : ''}
+          ${formatDateDE(x.dateRaw, x.year) ? `<div class="meta-row"><b>Datum:</b> ${formatDateDE(x.dateRaw, x.year)}</div>` : ''}
+          ${x.series ? `<div class="meta-row"><b>Serie:</b> ${escapeHtml(shortSeries(x.series))}</div>` : ''}
+          ${x.event ? `<div class="meta-row"><b>Event:</b> ${escapeHtml(x.event)}</div>` : ''}
         </div>
       </div>`;
 
@@ -67,10 +68,10 @@ export function render(state, el) {
       })
         .then(res => {
           if (!res.ok) throw new Error('Failed');
-          localStorage.setItem('batman-read', JSON.stringify(payload));
+          localStorage.setItem(LS_KEY, JSON.stringify(payload));
         })
         .catch(() => {
-          localStorage.setItem('batman-read', JSON.stringify(payload));
+          localStorage.setItem(LS_KEY, JSON.stringify(payload));
         });
 
       const nowRead = state.readSet.has(id);
