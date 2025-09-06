@@ -11,9 +11,8 @@ header{position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8p
 .head{display:flex; justify-content:space-between; padding:14px 24px; align-items:center}
 .brand{display:flex; align-items:center; gap:12px}
 .logo{width:44px; height:44px; display:grid; place-items:center; border-radius:12px; background:#1b1f2a; border:1px solid var(--outline)}
-.logo svg{width:28px; height:28px; fill:var(--accent)}
+.logo img{width:28px;height:28px}
 .title{font-size:20px; font-weight:700}
-.subtitle{color:var(--muted); font-size:13px}
 .actions{display:flex;align-items:center;gap:10px}
 
 .icon-btn{display:inline-grid; place-items:center; width:38px; height:38px; border-radius:10px; border:1px solid var(--outline); background:#0f1320; color:var(--ink); cursor:pointer}
