@@ -69,12 +69,12 @@ export function normalize(item){
 export function formatDateDE(dateRaw, year){
   if(dateRaw){
     const d=new Date(dateRaw);
-    if(!isNaN(d)) return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getFullYear()%100).padStart(2,'0')}`;
+    if(!isNaN(d)) return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getFullYear()).padStart(4,'0')}`;
   }
-  if(year!=='' && year!=null) return `01.01.${String(Number(year)%100).padStart(2,'0')}`;
+  if(year!=='' && year!=null) return `01.01.${String(Number(year)).padStart(4,'0')}`;
   return '';
 }
 
 export function shortSeries(s){ const m=/^(.*)\((\d{4})\)\s*$/.exec(String(s||'').trim()); return m ? `${m[1].trim()} ’${String(m[2]).slice(2)}` : (s||''); }
 
-export function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+export function escapeHtml(s){ return String(s).replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;','\\'':'&#39;'}[m])); }
