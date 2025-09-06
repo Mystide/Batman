@@ -33,7 +33,7 @@ export function render(state, el) {
           x.cover
             ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" decoding="async"
                  src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer"
-                 onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\\'tag\\' style=\\'opacity:.7\\'>Kein Cover</div>');">`
+                 onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\'tag\' style=\'opacity:.7\'>Kein Cover</div>');">`
             : '<div class="tag" style="opacity:.7">Kein Cover</div>'
         }
       </div>
