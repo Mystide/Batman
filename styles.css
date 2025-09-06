@@ -1,4 +1,6 @@
-:root{ --bg:#0b0d12; --bg-soft:#11141b; --ink:#e7ecf3; --muted:#9aa4b2; --accent:#f1c40f; --accent-2:#ffd761; --outline:#1c2230; --ok:#31c48d; --danger:#f05252; }
+/* styles.css */
+:root{ --bg:#0b0d12; --bg-soft:#11141b; --ink:#e7ecf3; --muted:#9aa4b2; --accent:#f1c40f; --accent-2:#ffd761; --outline:#1c2230;
+ --ok:#31c48d; --danger:#f05252; }
 html,body{height:100%}
 body{margin:0; background:linear-gradient(180deg, #0a0c11 0%, #080a0f 100%); color:var(--ink); font:15px/1.5 "Montserrat","Roboto",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial;}
 .no-scroll{overflow:hidden}
@@ -15,7 +17,8 @@ header{position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8p
 .title{font-size:20px; font-weight:700}
 .actions{display:flex;align-items:center;gap:10px}
 
-.icon-btn{display:inline-grid; place-items:center; width:38px; height:38px; border-radius:10px; border:1px solid var(--outline); background:#0f1320; color:var(--ink); cursor:pointer}
+.icon-btn{display:inline-grid; place-items:center; width:38px; height:38px; border-radius:10px; border:1px solid var(--outline);
+ background:#0f1320; color:var(--ink); cursor:pointer}
 .icon-btn:hover{border-color:#2b3346}
 
 /* Drawer */
