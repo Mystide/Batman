@@ -2,14 +2,20 @@ import { render } from './render.js';
 
 export function buildFilters(state, el){
   const items = state.items;
-  const bySeries=new Set(items.map(x=>x.series).filter(Boolean));
-  const byEvent=new Set(items.map(x=>x.event).filter(Boolean));
-  const byYear=new Set(items.map(x=>x.year).filter(y=> y!=='' && !Number.isNaN(Number(y))));
-  const byChar=new Set(items.flatMap(x=>x.characters||[]));
-  fillSelect(el.mseries,['Alle Serien',...bySeries]);
-  fillSelect(el.mevent,['Alle Events',...byEvent]);
-  fillSelect(el.myear,['Alle Jahre',...Array.from(byYear).map(Number).sort((a,b)=>a-b).map(String)]);
-  if(el.mchar) fillSelect(el.mchar,['Alle Figuren',...Array.from(byChar).sort()]);
+  const bySeries = new Set(items.map(x => x.series).filter(Boolean));
+  const byEvent = Array.from(new Set(items.map(x => x.event).filter(Boolean))).sort();
+  const byYear = new Set(items.map(x => x.year).filter(y => y !== '' && !Number.isNaN(Number(y))));
+  const byChar = Array.from(new Set(items.flatMap(x => {
+    const chars = x.characters;
+    if (!chars) return [];
+    if (Array.isArray(chars)) return chars;
+    if (typeof chars === 'string') return chars.split(',').map(c => c.trim()).filter(Boolean);
+    return [];
+  }))).sort();
+  fillSelect(el.mseries, ['Alle Serien', ...bySeries]);
+  fillSelect(el.mevent, ['Alle Events', ...byEvent]);
+  fillSelect(el.myear, ['Alle Jahre', ...Array.from(byYear).map(Number).sort((a,b)=>a-b).map(String)]);
+  if (el.mchar) fillSelect(el.mchar, ['Alle Figuren', ...byChar]);
 }
 
 function fillSelect(sel,items){ sel.innerHTML=items.map((v,i)=>`<option value="${i? v:''}">${v}</option>`).join(''); }
