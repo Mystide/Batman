@@ -5,6 +5,9 @@ body{margin:0; background:linear-gradient(180deg, #0a0c11 0%, #080a0f 100%); col
 .no-scroll{overflow:hidden}
 .container{max-width:1200px; margin:0 auto; padding:24px;}
 
+#tokenWarning{background:#1a0f0f;color:var(--danger);text-align:center;padding:8px 24px;}
+#tokenWarning a{color:inherit;text-decoration:underline;}
+
 header{position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8px); background:linear-gradient(180deg, rgba(10,12,17,.9) 0%, rgba(10,12,17,.65) 100%); border-bottom:1px solid var(--outline);}
 .head{display:flex; justify-content:space-between; padding:14px 24px; align-items:center}
 .brand{display:flex; align-items:center; gap:12px}
