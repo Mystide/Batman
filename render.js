@@ -40,6 +40,7 @@ export function render(state, el) {
           ${formattedDate ? `<div class="meta-row"><b>Datum:</b> ${formattedDate}</div>` : ''}
           ${x.series ? `<div class="meta-row"><b>Serie:</b><span>${escapeHtml(shortSeries(x.series))}</span></div>` : ''}
           ${x.event ? `<div class="meta-row"><b>Event:</b> ${escapeHtml(x.event)}</div>` : ''}
+          ${x.dcui ? `<div class="meta-row"><b>DCUI:</b> <a href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener noreferrer">Link</a></div>` : ''}
         </div>
       </div>`;
 
