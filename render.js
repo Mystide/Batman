@@ -1,7 +1,7 @@
 import { formatDateDE, shortSeries, escapeHtml } from './api.js';
 
-const GIST_ID = 'your-gist-id';
-const FILE = 'batman-status.json';
+const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28';
+const FILE = 'readStatus.json';
 
 export function updateStats(state, el) {
   const rawIds = new Set(
