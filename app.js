@@ -21,8 +21,10 @@ const el = {
 const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
 
 function updateHeaderHeight() {
-  const h = document.querySelector('header')?.offsetHeight || 0;
-  document.documentElement.style.setProperty('--header-h', `${h}px`);
+  const warning = el.tokenWarning?.offsetHeight || 0;
+  const error   = el.loadError?.offsetHeight || 0;
+  const header  = document.querySelector('header')?.offsetHeight || 0;
+  document.documentElement.style.setProperty('--header-h', `${warning + error + header}px`);
 }
 
 function updateViewToggle() {
