@@ -1,5 +1,5 @@
 /* styles.css */
-:root{ --bg:#0b0d12; --bg-soft:#11141b; --ink:#e7ecf3; --muted:#9aa4b2; --accent:#f1c40f; --accent-2:#ffd761; --outline:#1c2230;
+:root{ --header-h:72px; --bg:#0b0d12; --bg-soft:#11141b; --ink:#e7ecf3; --muted:#9aa4b2; --accent:#f1c40f; --accent-2:#ffd761; --outline:#1c2230;
   --ok:#31c48d; --danger:#f05252; }
 html,body{height:100%}
 body{margin:0; background:linear-gradient(180deg, #0a0c11 0%, #080a0f 100%); color:var(--ink); font:15px/1.5 "Montserrat","Roboto",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial;}
@@ -9,7 +9,7 @@ body{margin:0; background:linear-gradient(180deg, #0a0c11 0%, #080a0f 100%); col
 #tokenWarning{background:#1a0f0f;color:var(--danger);text-align:center;padding:8px 24px;}
 #tokenWarning a{color:inherit;text-decoration:underline;}
 
-header{position:fixed; top:0; z-index:50; width:100%; backdrop-filter:saturate(1.2) blur(8px); background:linear-gradient(180deg, rgba(10,12,17,.9) 0%, rgba(10,12,17,.65) 100%); border-bottom:1px solid var(--outline);}
+header{position:fixed; top:0; z-index:50; width:100%; height:var(--header-h); backdrop-filter:saturate(1.2) blur(8px); background:linear-gradient(180deg, rgba(10,12,17,.9) 0%, rgba(10,12,17,.65) 100%); border-bottom:1px solid var(--outline);}
 .head{display:flex; justify-content:space-between; padding:14px 24px; align-items:center}
 .brand{display:flex; align-items:center; gap:12px}
 .logo{width:44px; height:44px; display:grid; place-items:center; border-radius:12px; background:transparent; border:none}
@@ -47,7 +47,7 @@ header{position:fixed; top:0; z-index:50; width:100%; backdrop-filter:saturate(1
 .bar{flex:1; height:10px; background:#0f1320; border:1px solid var(--outline); border-radius:999px; overflow:hidden}
 .bar>i{display:block; height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2))}
 
-main{padding:8px 24px 40px}
+main{padding:8px 24px 40px; padding-top:calc(var(--header-h) + 8px);}
 .grid{display:grid; gap:14px}
 #grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
 .cover-mode #grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
