@@ -21,8 +21,7 @@ header{position:sticky; top:0; z-index:50; backdrop-filter:saturate(1.2) blur(8p
   background:#0f1320; color:var(--ink); cursor:pointer}
 .icon-btn:hover{border-color:#2b3346}
 .icon-btn img{width:20px;height:20px}
-.flipped{transform:scaleY(-1);transition:transform .3s}
-body.cover-mode #toggleView{background:var(--accent); color:#000}
+.flipped{transform:scaleX(-1);transition:transform .3s}
 
 /* Drawer */
 .drawer{position:fixed; inset:0; display:none; z-index:10000}
