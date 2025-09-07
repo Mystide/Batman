@@ -107,14 +107,14 @@ async function init() {
 
 export function showTokenNotice() {
   el.tokenWarning.hidden = false;
-  updateHeaderHeight();
+  requestAnimationFrame(updateHeaderHeight);
 }
 
 function showLoadError(msg) {
   if (el.loadError) {
     el.loadError.textContent = msg;
     el.loadError.hidden = false;
-    updateHeaderHeight();
+    requestAnimationFrame(updateHeaderHeight);
   }
 }
 
