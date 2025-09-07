@@ -1,4 +1,3 @@
-// api.js
 export const DATA_LIST_URL = './data/list.json';
 export const DATA_FALLBACK_URL = './comics.json';
 
@@ -60,8 +59,7 @@ export async function loadData(){
 
   const seen = new Set();
   raw = raw.filter(x=>{
-    const id = (x.id || `${x.series||''}#${x.issue||''}-${x.title||''}`)
-      .toLowerCase().replace(/\s+/g,'_');
+    const id = generateId(x);
     if(seen.has(id)) return false; seen.add(id); return true;
   });
 
@@ -75,20 +73,33 @@ export function extractYearFromSeries(series){
   return m ? Number(m[1]) : '';
 }
 
+export function generateId({ id, series, issue, title }){
+  return (id || `${series||''}#${issue||''}-${title||''}`)
+    .toLowerCase().replace(/\s+/g,'_');
+}
+
+export function deriveYear(item, dateRaw){
+  let year = Number(item.year);
+  if(!Number.isFinite(year)){
+    const d = new Date(dateRaw||'');
+    year = !isNaN(d) ? d.getFullYear() : extractYearFromSeries(item.series);
+  }
+  return Number.isFinite(year)?year:'';
+}
+
+export function buildSearchString(item){
+  return `${item.title||''} ${item.series||''} ${item.event||''}`.toLowerCase();
+}
+
 export function normalize(item){
   const { dcui_link, dcui, ...rest } = item;
   const dateRaw = firstOf(rest.date, rest.release_date, rest.publication_date, rest.published);
-  let year = Number(rest.year);
-  if(!Number.isFinite(year)){
-    const d = new Date(dateRaw||'');
-    year = !isNaN(d) ? d.getFullYear() : extractYearFromSeries(rest.series);
-  }
+  const year = deriveYear(rest, dateRaw);
   const coverUrl = firstOf(rest.cover, rest.covers, rest.image, rest.thumbnail);
-  const id=(rest.id||`${rest.series||''}#${rest.issue||''}-${rest.title||''}`)
-    .toLowerCase().replace(/\s+/g,'_');
+  const id = generateId(rest);
   const ts = dateRaw ? new Date(dateRaw).getTime() : (Number.isFinite(year) ? new Date(year,0,1).getTime() : 0);
-  const search = `${rest.title||''} ${rest.series||''} ${rest.event||''}`.toLowerCase();
-  return { ...rest, dcui: firstOf(dcui, dcui_link), id, year: Number.isFinite(year)?year:'', dateRaw, cover: coverUrl, ts, search };
+  const search = buildSearchString(rest);
+  return { ...rest, dcui: firstOf(dcui, dcui_link), id, year, dateRaw, cover: coverUrl, ts, search };
 }
 
 export function formatDateDE(dateRaw, year){
@@ -111,11 +122,11 @@ export function shortSeries(s){
 }
 
 export function escapeHtml(s){
-  return String(s).replace(/[&<>\"']/g, m => ({
+  return String(s).replace(/[&<>"']/g, m => ({
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
-    '\"': '&quot;',
+    '"': '&quot;',
     "'": '&#39;'
   }[m]));
 }
