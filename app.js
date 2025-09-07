@@ -29,28 +29,40 @@ if (localStorage.getItem(VIEW_KEY) === 'cover') {
 init();
 
 async function init() {
-  try {
-    const token = localStorage.getItem('gistToken');
-    if (!token) {
+  const token = localStorage.getItem('gistToken');
+  if (token) {
+    try {
+      const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+        cache: 'no-store',
+        headers: { Authorization: `token ${token}` }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const list = JSON.parse(json.files[FILE].content || '[]');
+        state.readSet = new Set(list);
+        localStorage.setItem(LS_KEY, JSON.stringify(list));
+      } else if (res.status === 401 || res.status === 403) {
+        showTokenNotice();
+      } else {
+        console.warn('Request failed', res.status);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch gist', err);
       showTokenNotice();
-      throw new Error('Missing token');
     }
-    const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-      cache: 'no-store',
-      headers: { Authorization: `token ${token}` }
-    });
-    if (res.ok) {
-      const json = await res.json();
-      const list = JSON.parse(json.files[FILE].content || '[]');
-      state.readSet = new Set(list);
-      localStorage.setItem(LS_KEY, JSON.stringify(list));
-    } else if (res.status === 401 || res.status === 403) {
-      showTokenNotice();
-      throw new Error('Unauthorized');
-    } else {
-      throw new Error('Request failed');
-    }
-@@ -56,25 +62,30 @@ async function init() {
+  } else {
+    showTokenNotice();
+  }
+
+  if (state.readSet.size === 0) {
+    const list = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+    state.readSet = new Set(list);
+  }
+
+  state.raw = await loadData();
+  state.items = state.raw.map(normalize);
+  state.idSet = new Set(state.items.map(x => x.id));
+
   buildFilters(state, el);
   loadFilters(el);
   const applyFn = () => apply(state, el, collator);
