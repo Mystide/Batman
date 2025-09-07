@@ -5,22 +5,16 @@ const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28';
 const FILE = 'readStatus.json';
 const LS_KEY = 'comic-tracker-read';
 
-async function isValidUrl(link) {
+function isValidUrl(link) {
+  if (!link || link === 'null') return false;
   try {
-    const url = new URL(link);
-    if (typeof fetch === 'function') {
-      try {
-        const res = await fetch(url, { method: 'HEAD' });
-        return res.ok;
-      } catch {
-        return false;
-      }
-    }
+    new URL(link);
     return true;
   } catch {
     return false;
   }
 }
+
 
 export function updateStats(state, el) {
   const rawIds = state.idSet;
