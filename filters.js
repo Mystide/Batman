@@ -2,7 +2,10 @@ import { render } from './render.js';
 
 export function buildFilters(state, el){
   const items = state.items;
-  const bySeries = new Set(items.map(x => x.series).filter(Boolean));
+  const collator = new Intl.Collator('de');
+  const bySeries = Array.from(
+    new Set(items.map(x => x.series).filter(Boolean))
+  ).sort(collator.compare);
   const byEvent = Array.from(new Set(items.map(x => x.event).filter(Boolean))).sort();
   const byYear = new Set(items.map(x => x.year).filter(y => y !== '' && !Number.isNaN(Number(y))));
   const byChar = Array.from(new Set(items.flatMap(x => {
