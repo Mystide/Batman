@@ -46,7 +46,7 @@ export function render(state, el) {
        ${x.year ? `<span class="year-tag">${escapeHtml(String(x.year))}</span>` : ''}
        ${
            dcuiValid
-             ? `<a class="dcui-link" href="${escapeHtml(dcuiUrl)}" target="_blank" rel="noopener noreferrer"><img src="dc-logo.png" alt="DC Logo"></a>`
+             ? `<a class="dcui-link" href="${escapeHtml(dcuiUrl)}" target="_blank" rel="noopener noreferrer"><img src="icons/dc-logo.png" alt="DC Logo"></a>`
              : ''
          }
         </div>
