@@ -49,12 +49,12 @@ main{padding:8px 24px 40px}
 .grid{display:grid; gap:14px}
 #grid{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
 
-.card{position:relative; border:1px solid var(--outline); background:#101521; border-radius:16px; overflow:hidden}
+.card{position:relative; border:1px solid var(--outline); background:#101521; border-radius:16px; overflow:hidden; display:flex; flex-direction:column}
 .cover-wrap{position:relative; aspect-ratio:3/4.2; display:block; background:#0c0f16; border-bottom:1px solid var(--outline)}
 .cover-wrap::after{content:""; position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.10) 50%, rgba(0,0,0,0) 80%); pointer-events:none; z-index:1}
 .cover{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0}
 
-.content{padding:10px 12px 12px; display:flex; flex-direction:column; gap:8px}
+.content{padding:10px 12px 12px; display:flex; flex-direction:column; gap:8px; flex:1}
 .h{font-weight:700; font-size:14px}
 .meta{display:grid; gap:4px; color:var(--muted); font-size:12px}
 .meta-row{display:flex; gap:4px; flex-wrap:nowrap}
