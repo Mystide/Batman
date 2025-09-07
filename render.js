@@ -35,6 +35,11 @@ export function render(state, el) {
         }
       ${x.year ? `<span class="year-tag">${escapeHtml(String(x.year))}</span>` : ''}
       </div>
+              ${
+          x.dcui
+            ? `<a class="dcui-link" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener noreferrer"><img src="dc-logo.png" alt="DC Logo"></a>`
+            : ''
+        }
         <div class="content">
           <div class="h">${escapeHtml(x.title)}${x.issue ? ` <small class="issue-num">#${escapeHtml(x.issue)}</small>` : ''}</div>
           <div class="meta">
@@ -42,11 +47,6 @@ export function render(state, el) {
             ${x.series ? `<div class="meta-row"><b>Serie:</b><span>${escapeHtml(shortSeries(x.series))}</span></div>` : ''}
             ${x.event ? `<div class="meta-row"><b>Event:</b> ${escapeHtml(x.event)}</div>` : ''}
           </div>
-          ${
-            x.dcui
-              ? `<a class="dcui-link" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener noreferrer"><img src="dc-logo.png" alt="DC Logo"></a>`
-              : ''
-          }
         </div>`;
 
     const btn = card.querySelector('.read-toggle');
