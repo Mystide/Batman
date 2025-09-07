@@ -60,7 +60,8 @@ export async function loadData(){
 
   const seen = new Set();
   raw = raw.filter(x=>{
-    const id = (x.id || `${x.series||''}#${x.issue||''}-${x.title||''}`).toLowerCase();
+    const id = (x.id || `${x.series||''}#${x.issue||''}-${x.title||''}`)
+      .toLowerCase().replace(/\s+/g,'_');
     if(seen.has(id)) return false; seen.add(id); return true;
   });
 
@@ -83,9 +84,11 @@ export function normalize(item){
     year = !isNaN(d) ? d.getFullYear() : extractYearFromSeries(rest.series);
   }
   const coverUrl = firstOf(rest.cover, rest.covers, rest.image, rest.thumbnail);
-  const id=(rest.id||`${rest.series||''}#${rest.issue||''}-${rest.title||''}`).toLowerCase().replace(/\s+/g,'_');
+  const id=(rest.id||`${rest.series||''}#${rest.issue||''}-${rest.title||''}`)
+    .toLowerCase().replace(/\s+/g,'_');
   const ts = dateRaw ? new Date(dateRaw).getTime() : (Number.isFinite(year) ? new Date(year,0,1).getTime() : 0);
-  return { ...rest, dcui: firstOf(dcui, dcui_link), id, year: Number.isFinite(year)?year:'', dateRaw, cover: coverUrl, ts };
+  const search = `${rest.title||''} ${rest.series||''} ${rest.event||''}`.toLowerCase();
+  return { ...rest, dcui: firstOf(dcui, dcui_link), id, year: Number.isFinite(year)?year:'', dateRaw, cover: coverUrl, ts, search };
 }
 
 export function formatDateDE(dateRaw, year){
@@ -108,7 +111,7 @@ export function shortSeries(s){
 }
 
 export function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, m => ({
+  return String(s).replace(/[&<>\"']/g, m => ({
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
