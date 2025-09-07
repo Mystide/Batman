@@ -1,8 +1,8 @@
 import { jest } from '@jest/globals';
 
 const renderMock = jest.fn();
-await jest.unstable_mockModule('../render.js', () => ({ render: renderMock }));
-const { apply } = await import('../filters.js');
+await jest.unstable_mockModule('../src/render.js', () => ({ render: renderMock }));
+const { apply } = await import('../src/filters.js');
 
 describe('apply', () => {
   function createState() {
