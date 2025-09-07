@@ -1,5 +1,6 @@
 import { loadData, normalize } from './api.js';
 import { buildFilters, bindUI, loadFilters, apply } from './filters.js';
+import { GIST_ID, FILE, LS_KEY, VIEW_KEY } from './constants.js';
 
 const $ = sel => document.querySelector(sel);
 
@@ -18,10 +19,6 @@ const el = {
 };
 
 const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
-const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28';
-const FILE = 'readStatus.json';
-const LS_KEY = 'comic-tracker-read';
-const VIEW_KEY = 'comic-tracker-view';
 
 function updateHeaderHeight() {
   const h = document.querySelector('header')?.offsetHeight || 0;
@@ -30,12 +27,12 @@ function updateHeaderHeight() {
 
 function updateViewToggle() {
   const isCover = document.body.classList.contains('cover-mode');
-  const imgEl = el.toggleView.querySelector('img');
+  const imgEl = el.toggleView?.querySelector('img');
   if (imgEl) {
     imgEl.classList.toggle('flipped', isCover);
   }
-  el.toggleView.classList.toggle('cover-mode-active', isCover);
-  el.toggleView.setAttribute('aria-pressed', String(isCover));
+  el.toggleView?.classList.toggle('cover-mode-active', isCover);
+  el.toggleView?.setAttribute('aria-pressed', String(isCover));
 }
 
 if (localStorage.getItem(VIEW_KEY) === 'cover') {
@@ -109,23 +106,35 @@ function showLoadError(msg) {
   }
 }
 
-el.tokenLink.addEventListener('click', e => {
-  e.preventDefault();
-  el.tokenDialog.showModal();
-});
+if (el.tokenLink) {
+  el.tokenLink.addEventListener('click', e => {
+    e.preventDefault();
+    el.tokenDialog?.showModal();
+  });
+} else {
+  console.warn('Missing tokenLink element');
+}
 
-el.tokenForm.addEventListener('submit', e => {
-  e.preventDefault();
-  const token = el.tokenInput.value.trim();
-  if (token) {
-    sessionStorage.setItem('gistToken', token);
-    el.tokenDialog.close();
-    location.reload();
-  }
-});
+if (el.tokenForm) {
+  el.tokenForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const token = el.tokenInput?.value.trim();
+    if (token) {
+      sessionStorage.setItem('gistToken', token);
+      el.tokenDialog?.close();
+      location.reload();
+    }
+  });
+} else {
+  console.warn('Missing tokenForm element');
+}
 
-el.toggleView.addEventListener('click', () => {
-  const isCover = document.body.classList.toggle('cover-mode');
-  localStorage.setItem(VIEW_KEY, isCover ? 'cover' : 'list');
-  updateViewToggle();
-});
+if (el.toggleView) {
+  el.toggleView.addEventListener('click', () => {
+    const isCover = document.body.classList.toggle('cover-mode');
+    localStorage.setItem(VIEW_KEY, isCover ? 'cover' : 'list');
+    updateViewToggle();
+  });
+} else {
+  console.warn('Missing toggleView element');
+}
