@@ -18,7 +18,7 @@ const el = {
 
 const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
 const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28';
-const FILE = 'readStatus.json';
+the FILE = 'readStatus.json';
 const LS_KEY = 'comic-tracker-read';
 const VIEW_KEY = 'comic-tracker-view';
 
@@ -102,7 +102,7 @@ el.tokenForm.addEventListener('submit', e => {
 
 el.toggleView.addEventListener('click', () => {
   const isCover = document.body.classList.toggle('cover-mode');
-   const img = el.toggleView.querySelector('img');
+  const img = el.toggleView.querySelector('img');
   if (img) {
     img.classList.toggle('flipped');
   }
