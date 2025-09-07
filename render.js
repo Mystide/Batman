@@ -1,9 +1,6 @@
 // render.js
 import { formatDateDE, shortSeries, escapeHtml } from './api.js';
-
-const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28';
-const FILE = 'readStatus.json';
-const LS_KEY = 'comic-tracker-read';
+import { GIST_ID, FILE, LS_KEY } from './constants.js';
 
 function isValidUrl(link) {
   const str = String(link || '').trim();
@@ -37,13 +34,13 @@ export function render(state, el) {
     card.className = 'card';
     const dcuiUrl = String(x.dcui || x.dcui_link || '').trim();
     const dcuiValid = isValidUrl(dcuiUrl);
+    const coverUrl = isValidUrl(x.cover) ? x.cover : null;
     card.innerHTML = `
        <button class="read-toggle ${isRead ? 'active' : ''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}">${isRead ? 'Gelesen' : 'Ungelesen'}</button>
        <div class="cover-wrap">
          ${
-           x.cover
-             ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" fetchpriority="low" decoding="async"
-                  src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer">`
+           coverUrl
+             ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" fetchpriority="low" decoding="async" src="${escapeHtml(coverUrl)}" referrerpolicy="no-referrer">`
              : '<div class="tag" style="opacity:.7">Kein Cover</div>'
          }
        ${x.year ? `<span class="year-tag">${escapeHtml(String(x.year))}</span>` : ''}
