@@ -73,7 +73,14 @@ async function init() {
     state.readSet = new Set(list);
   }
 
-  state.raw = await loadData();
+  try {
+    state.raw = await loadData();
+  } catch (err) {
+    console.warn('Failed to load data', err);
+    showLoadError('Fehler beim Laden der Daten.');
+    state.raw = [];
+  }
+
   state.items = state.raw.map(normalize);
   state.idSet = new Set(state.items.map(x => x.id));
 
