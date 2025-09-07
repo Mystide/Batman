@@ -5,7 +5,7 @@ import {
   extractYearFromSeries,
   escapeHtml,
   firstOf
-} from '../api.js';
+} from '../src/api.js';
 
 describe('formatDateDE', () => {
   test('formats valid date', () => {
