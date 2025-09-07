@@ -176,7 +176,7 @@ export function formatDateDE(dateRaw, year) {
     if (!isNaN(d)) {
       const day = String(d.getDate()).padStart(2, '0');
       const month = String(d.getMonth() + 1).padStart(2, '0');
-      the yearStr = String(d.getFullYear()).padStart(4, '0');
+      const yearStr = String(d.getFullYear()).padStart(4, '0');
       return `${day}.${month}.${yearStr}`;
     }
   }
