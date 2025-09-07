@@ -8,6 +8,7 @@ const el = {
   grid: $('#grid'), empty: $('#empty'),
   mq: $('#mq'), mseries: $('#mseries'), myear: $('#myear'), mevent: $('#mevent'), mchar: $('#mchar'), msort: $('#msort'),
   quickHideRead: $('#quickHideRead'),
+  toggleView: $('#toggleView'),
   count: $('#count'), readCount: $('#readCount'), progress: $('#progress'),
   openFilters: $('#openFilters'), drawer: $('#drawer'), closeDrawer: $('#closeDrawer'), closeDrawerBtn: $('#closeDrawerBtn'),
   mResetFilters: $('#mResetFilters'), clearSearch: $('#clearSearch'),
@@ -19,6 +20,11 @@ const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' })
 const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28';
 const FILE = 'readStatus.json';
 const LS_KEY = 'comic-tracker-read';
+const VIEW_KEY = 'comic-tracker-view';
+
+if (localStorage.getItem(VIEW_KEY) === 'cover') {
+  document.body.classList.add('cover-mode');
+}
 
 init();
 
@@ -77,4 +83,9 @@ el.tokenForm.addEventListener('submit', e => {
     el.tokenDialog.close();
     location.reload();
   }
+});
+
+el.toggleView.addEventListener('click', () => {
+  const isCover = document.body.classList.toggle('cover-mode');
+  localStorage.setItem(VIEW_KEY, isCover ? 'cover' : 'list');
 });
