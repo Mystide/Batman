@@ -41,6 +41,7 @@ if (localStorage.getItem(VIEW_KEY) === 'cover') {
 updateViewToggle();
 updateHeaderHeight();
 window.addEventListener('resize', updateHeaderHeight);
+window.addEventListener('load', updateHeaderHeight);
 
 // Migrate legacy sessionStorage token to localStorage
 const legacyToken = sessionStorage.getItem('gistToken');
