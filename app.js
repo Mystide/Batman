@@ -50,15 +50,7 @@ async function init() {
     } else {
       throw new Error('Request failed');
     }
-  } catch {
-    state.readSet = new Set(
-      JSON.parse(localStorage.getItem(LS_KEY) || '[]')
-    );
-  }
-
-  state.raw = await loadData();
-  state.items = state.raw.map(normalize);
-  state.idSet = new Set(state.items.map(x => x.id));
+@@ -56,25 +62,30 @@ async function init() {
   buildFilters(state, el);
   loadFilters(el);
   const applyFn = () => apply(state, el, collator);
