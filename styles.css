@@ -45,7 +45,7 @@ header{position:fixed; top:0; z-index:50; width:100%; backdrop-filter:saturate(1
 .bar{flex:1; height:10px; background:#0f1320; border:1px solid var(--outline); border-radius:999px; overflow:hidden}
 .bar>i{display:block; height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2))}
 
-main{padding:8px 24px 40px; padding-top:calc(var(--header-h) + 8px);}
+main.container{padding:8px 24px 40px; padding-top:calc(var(--header-h) + 8px);}
 .grid{display:grid; gap:14px}
 #grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
 .cover-mode #grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
