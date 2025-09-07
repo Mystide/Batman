@@ -29,7 +29,7 @@ export function updateStats(state, el) {
 
 export function render(state, el) {
   el.grid.innerHTML = '';
-  const toValidate = [];
+  const fragment = document.createDocumentFragment();
   for (const x of state.view) {
     const isRead = state.readSet.has(x.id);
     const formattedDate = formatDateDE(x.dateRaw, x.year);
@@ -38,30 +38,30 @@ export function render(state, el) {
     const dcuiUrl = String(x.dcui || x.dcui_link || '').trim();
     const dcuiValid = isValidUrl(dcuiUrl);
     card.innerHTML = `
-      <button class="read-toggle ${isRead ? 'active' : ''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}">${isRead ? 'Gelesen' : 'Ungelesen'}</button>
-      <div class="cover-wrap">
-        ${
-          x.cover
-            ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="eager" decoding="async"
-                 src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer"
-                 onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\\'tag\\' style=\\'opacity:.7\\'>Kein Cover</div>');">`
-            : '<div class="tag" style="opacity:.7">Kein Cover</div>'
-        }
-      ${x.year ? `<span class="year-tag">${escapeHtml(String(x.year))}</span>` : ''}
-      ${
-          dcuiValid
-            ? `<a class="dcui-link" href="${escapeHtml(dcuiUrl)}" target="_blank" rel="noopener noreferrer"><img src="dc-logo.png" alt="DC Logo"></a>`
-            : ''
-        }
-       </div>
-       <div class="content">
-        <div class="h">${escapeHtml(x.title)}${x.issue ? ` <small class="issue-num">#${escapeHtml(x.issue)}</small>` : ''}</div>
-        <div class="meta">
-          ${formattedDate ? `<div class="meta-row"><b>Datum:</b> ${formattedDate}</div>` : ''}
-          ${x.series ? `<div class="meta-row"><b>Serie:</b><span>${escapeHtml(shortSeries(x.series))}</span></div>` : ''}
-          ${x.event ? `<div class="meta-row"><b>Event:</b> ${escapeHtml(x.event)}</div>` : ''}
+       <button class="read-toggle ${isRead ? 'active' : ''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}">${isRead ? 'Gelesen' : 'Ungelesen'}</button>
+       <div class="cover-wrap">
+         ${
+           x.cover
+             ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" fetchpriority="low" decoding="async"
+                  src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer"
+                  onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\\'tag\\' style=\\'opacity:.7\\'>Kein Cover</div>');">`
+             : '<div class="tag" style="opacity:.7">Kein Cover</div>'
+         }
+       ${x.year ? `<span class="year-tag">${escapeHtml(String(x.year))}</span>` : ''}
+       ${
+           dcuiValid
+             ? `<a class="dcui-link" href="${escapeHtml(dcuiUrl)}" target="_blank" rel="noopener noreferrer"><img src="dc-logo.png" alt="DC Logo"></a>`
+             : ''
+         }
         </div>
-      </div>`;
+        <div class="content">
+         <div class="h">${escapeHtml(x.title)}${x.issue ? ` <small class="issue-num">#${escapeHtml(x.issue)}</small>` : ''}</div>
+         <div class="meta">
+           ${formattedDate ? `<div class="meta-row"><b>Datum:</b> ${formattedDate}</div>` : ''}
+           ${x.series ? `<div class="meta-row"><b>Serie:</b><span>${escapeHtml(shortSeries(x.series))}</span></div>` : ''}
+           ${x.event ? `<div class="meta-row"><b>Event:</b> ${escapeHtml(x.event)}</div>` : ''}
+         </div>
+       </div>`;
 
     const btn = card.querySelector('.read-toggle');
     btn.addEventListener('click', () => {
@@ -103,21 +103,9 @@ export function render(state, el) {
       updateStats(state, el);
     });
 
-    el.grid.appendChild(card);
-
-    if (dcuiValid) {
-      const linkEl = card.querySelector('.dcui-link');
-      toValidate.push({ el: linkEl, url: dcuiUrl });
-    }
+    fragment.appendChild(card);
   }
+  el.grid.appendChild(fragment);
   updateStats(state, el);
   el.empty.hidden = state.view.length > 0;
-
-  for (const { el: linkEl, url } of toValidate) {
-    fetch(url, { method: 'HEAD' })
-      .then(res => {
-        if (!res.ok) linkEl.remove();
-      })
-      .catch(() => linkEl.remove());
-  }
 }
