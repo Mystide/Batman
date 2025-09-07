@@ -43,8 +43,7 @@ export function render(state, el) {
          ${
            x.cover
              ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" fetchpriority="low" decoding="async"
-                  src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer"
-                  onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\\'tag\\' style=\\'opacity:.7\\'>Kein Cover</div>');">`
+                  src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer">`
              : '<div class="tag" style="opacity:.7">Kein Cover</div>'
          }
        ${x.year ? `<span class="year-tag">${escapeHtml(String(x.year))}</span>` : ''}
@@ -63,6 +62,16 @@ export function render(state, el) {
          </div>
        </div>`;
 
+    const cover = card.querySelector('.cover');
+    cover?.addEventListener('error', () => {
+      cover.style.display = 'none';
+      cover.closest('.cover-wrap')
+           ?.insertAdjacentHTML(
+             'beforeend',
+             "<div class='tag' style='opacity:.7'>Kein Cover</div>"
+           );
+    });
+
     const btn = card.querySelector('.read-toggle');
     btn.addEventListener('click', () => {
       const id = x.id;
@@ -72,23 +81,28 @@ export function render(state, el) {
 
       const payload = [...state.readSet];
       const token = localStorage.getItem('gistToken');
-      fetch(`https://api.github.com/gists/${GIST_ID}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `token ${token}`
-        },
-        body: JSON.stringify({
-          files: { [FILE]: { content: JSON.stringify(payload) } }
+
+      if (token) {
+        fetch(`https://api.github.com/gists/${GIST_ID}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `token ${token}`
+          },
+          body: JSON.stringify({
+            files: { [FILE]: { content: JSON.stringify(payload) } }
+          })
         })
-      })
-        .then(res => {
-          if (!res.ok) throw new Error('Failed');
-          localStorage.setItem(LS_KEY, JSON.stringify(payload));
-        })
-        .catch(() => {
-          localStorage.setItem(LS_KEY, JSON.stringify(payload));
-        });
+          .then(res => {
+            if (!res.ok) throw new Error('Failed');
+            localStorage.setItem(LS_KEY, JSON.stringify(payload));
+          })
+          .catch(() => {
+            localStorage.setItem(LS_KEY, JSON.stringify(payload));
+          });
+      } else {
+        localStorage.setItem(LS_KEY, JSON.stringify(payload));
+      }
 
       const nowRead = state.readSet.has(id);
       btn.classList.toggle('active', nowRead);
