@@ -1,5 +1,4 @@
 export const DATA_LIST_URL = './data/list.json';
-export const DATA_FALLBACK_URL = './comics.json';
 
 const DEMO_DATA = [
   {
@@ -72,19 +71,6 @@ export async function loadData() {
       }
     } catch (e) {
       console.warn('Liste konnte nicht geladen werden', e);
-    }
-
-    if (!loaded) {
-      try {
-        const res = await fetch(DATA_FALLBACK_URL, { cache: 'default' });
-        if (res.ok) {
-          const data = await res.json();
-          raw = Array.isArray(data) ? data : data.items || [];
-          loaded = raw.length > 0;
-        }
-      } catch (e) {
-        console.warn('Fallback konnte nicht geladen werden', e);
-      }
     }
 
     if (loaded) {
