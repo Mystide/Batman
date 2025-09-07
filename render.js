@@ -1,7 +1,6 @@
-// render.js
-import { formatDateDE, shortSeries, escapeHtml } from './api.js';
+import { formatDateDE, shortSeries } from './api.js';
 import { GIST_ID, FILE, LS_KEY } from './constants.js';
-import { showTokenNotice } from './app.js';
+import { showTokenNotice } from './ui.js';
 
 function isValidUrl(link) {
   const str = String(link || '').trim();
@@ -36,42 +35,113 @@ export function render(state, el) {
     const dcuiUrl = String(x.dcui || x.dcui_link || '').trim();
     const dcuiValid = isValidUrl(dcuiUrl);
     const coverUrl = isValidUrl(x.cover) ? x.cover : null;
-    card.innerHTML = `
-       <button class="read-toggle ${isRead ? 'active' : ''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}">${isRead ? 'Gelesen' : 'Ungelesen'}</button>
-       <div class="cover-wrap">
-         ${
-           coverUrl
-             ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" fetchpriority="low" decoding="async" src="${escapeHtml(coverUrl)}" referrerpolicy="no-referrer">`
-             : '<div class="tag" style="opacity:.7">Kein Cover</div>'
-         }
-       ${x.year ? `<span class="year-tag">${escapeHtml(String(x.year))}</span>` : ''}
-       ${
-           dcuiValid
-             ? `<a class="dcui-link" href="${escapeHtml(dcuiUrl)}" target="_blank" rel="noopener noreferrer"><img src="icons/dc-logo.png" alt="DC Logo"></a>`
-             : ''
-         }
-        </div>
-        <div class="content">
-         <div class="h">${escapeHtml(x.title)}${x.issue ? ` <small class="issue-num">#${escapeHtml(x.issue)}</small>` : ''}</div>
-         <div class="meta">
-           ${formattedDate ? `<div class="meta-row"><b>Datum:</b> ${formattedDate}</div>` : ''}
-           ${x.series ? `<div class="meta-row"><b>Serie:</b><span>${escapeHtml(shortSeries(x.series))}</span></div>` : ''}
-           ${x.event ? `<div class="meta-row"><b>Event:</b> ${escapeHtml(x.event)}</div>` : ''}
-         </div>
-       </div>`;
 
-    const cover = card.querySelector('.cover');
-    cover?.addEventListener('error', () => {
-      cover.style.display = 'none';
-      cover.closest('.cover-wrap')
-           ?.insertAdjacentHTML(
-             'beforeend',
-             "<div class='tag' style='opacity:.7'>Kein Cover</div>"
-           );
-    });
+    const toggle = document.createElement('button');
+    toggle.className = 'read-toggle';
+    if (isRead) toggle.classList.add('active');
+    toggle.setAttribute('aria-pressed', String(isRead));
+    toggle.dataset.id = x.id;
+    toggle.textContent = isRead ? 'Gelesen' : 'Ungelesen';
+    card.appendChild(toggle);
 
-    const btn = card.querySelector('.read-toggle');
-    btn.addEventListener('click', () => {
+    const coverWrap = document.createElement('div');
+    coverWrap.className = 'cover-wrap';
+    if (coverUrl) {
+      const img = document.createElement('img');
+      img.className = 'cover';
+      img.alt = `${x.title} Cover`;
+      img.loading = 'lazy';
+      img.fetchpriority = 'low';
+      img.decoding = 'async';
+      img.src = coverUrl;
+      img.referrerPolicy = 'no-referrer';
+      img.addEventListener('error', () => {
+        img.style.display = 'none';
+        const tag = document.createElement('div');
+        tag.className = 'tag';
+        tag.style.opacity = '.7';
+        tag.textContent = 'Kein Cover';
+        coverWrap.appendChild(tag);
+      });
+      coverWrap.appendChild(img);
+    } else {
+      const tag = document.createElement('div');
+      tag.className = 'tag';
+      tag.style.opacity = '.7';
+      tag.textContent = 'Kein Cover';
+      coverWrap.appendChild(tag);
+    }
+
+    if (x.year) {
+      const span = document.createElement('span');
+      span.className = 'year-tag';
+      span.textContent = String(x.year);
+      coverWrap.appendChild(span);
+    }
+    if (dcuiValid) {
+      const a = document.createElement('a');
+      a.className = 'dcui-link';
+      a.href = dcuiUrl;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      const logo = document.createElement('img');
+      logo.src = 'icons/dc-logo.png';
+      logo.alt = 'DC Logo';
+      a.appendChild(logo);
+      coverWrap.appendChild(a);
+    }
+    card.appendChild(coverWrap);
+
+    const content = document.createElement('div');
+    content.className = 'content';
+    const h = document.createElement('div');
+    h.className = 'h';
+    h.textContent = x.title;
+    if (x.issue) {
+      const small = document.createElement('small');
+      small.className = 'issue-num';
+      small.textContent = `#${x.issue}`;
+      h.appendChild(document.createTextNode(' '));
+      h.appendChild(small);
+    }
+    content.appendChild(h);
+
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+
+    if (formattedDate) {
+      const row = document.createElement('div');
+      row.className = 'meta-row';
+      const b = document.createElement('b');
+      b.textContent = 'Datum:';
+      row.appendChild(b);
+      row.appendChild(document.createTextNode(' ' + formattedDate));
+      meta.appendChild(row);
+    }
+    if (x.series) {
+      const row = document.createElement('div');
+      row.className = 'meta-row';
+      const b = document.createElement('b');
+      b.textContent = 'Serie:';
+      row.appendChild(b);
+      const span = document.createElement('span');
+      span.textContent = shortSeries(x.series);
+      row.appendChild(span);
+      meta.appendChild(row);
+    }
+    if (x.event) {
+      const row = document.createElement('div');
+      row.className = 'meta-row';
+      const b = document.createElement('b');
+      b.textContent = 'Event:';
+      row.appendChild(b);
+      row.appendChild(document.createTextNode(' ' + x.event));
+      meta.appendChild(row);
+    }
+    content.appendChild(meta);
+    card.appendChild(content);
+
+    toggle.addEventListener('click', () => {
       const id = x.id;
       const wasRead = state.readSet.has(id);
       if (wasRead) state.readSet.delete(id);
@@ -112,9 +182,9 @@ export function render(state, el) {
       }
 
       const nowRead = state.readSet.has(id);
-      btn.classList.toggle('active', nowRead);
-      btn.setAttribute('aria-pressed', nowRead);
-      btn.textContent = nowRead ? 'Gelesen' : 'Ungelesen';
+      toggle.classList.toggle('active', nowRead);
+      toggle.setAttribute('aria-pressed', nowRead);
+      toggle.textContent = nowRead ? 'Gelesen' : 'Ungelesen';
 
       if (el.quickHideRead && el.quickHideRead.checked && nowRead) {
         card.remove();
