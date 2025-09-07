@@ -25,6 +25,7 @@ function fillSelect(sel,items){ sel.innerHTML=items.map((v,i)=>`<option value="$
 
 export function apply(state, el, collator){
   const q=(el.mq.value||'').toLowerCase().trim();
+  const tokens = q ? q.split(/\s+/) : [];
   const fSeries=el.mseries.value; const fYear=el.myear.value; const fEvent=el.mevent.value; const fChar=el.mchar?el.mchar.value:'';
   const hideRead = !!(el.quickHideRead && el.quickHideRead.checked);
 
@@ -34,10 +35,7 @@ export function apply(state, el, collator){
     if(fEvent && x.event!==fEvent) return false;
     if(fChar && !(x.characters||[]).includes(fChar)) return false;
     if(hideRead && state.readSet.has(x.id)) return false;
-    if(q){
-      const hay=`${x.title} ${x.series} ${x.event}`.toLowerCase();
-      if(!q.split(/\s+/).every(tok=>hay.includes(tok))) return false;
-    }
+    if(tokens.length && !tokens.every(tok=>x.search.includes(tok))) return false;
     return true;
   });
 
