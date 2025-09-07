@@ -22,9 +22,15 @@ const FILE = 'readStatus.json';
 const LS_KEY = 'comic-tracker-read';
 const VIEW_KEY = 'comic-tracker-view';
 
+function updateViewToggle() {
+  const isCover = document.body.classList.contains('cover-mode');
+  el.toggleView.textContent = isCover ? '🖼' : '🗖';
+}
+
 if (localStorage.getItem(VIEW_KEY) === 'cover') {
   document.body.classList.add('cover-mode');
 }
+updateViewToggle();
 
 init();
 
@@ -92,4 +98,5 @@ el.tokenForm.addEventListener('submit', e => {
 el.toggleView.addEventListener('click', () => {
   const isCover = document.body.classList.toggle('cover-mode');
   localStorage.setItem(VIEW_KEY, isCover ? 'cover' : 'list');
+  updateViewToggle();
 });
