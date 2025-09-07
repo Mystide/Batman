@@ -42,10 +42,17 @@ updateViewToggle();
 updateHeaderHeight();
 window.addEventListener('resize', updateHeaderHeight);
 
+// Migrate legacy sessionStorage token to localStorage
+const legacyToken = sessionStorage.getItem('gistToken');
+if (legacyToken && !localStorage.getItem('gistToken')) {
+  localStorage.setItem('gistToken', legacyToken);
+  sessionStorage.removeItem('gistToken');
+}
+
 init();
 
 async function init() {
-  const token = sessionStorage.getItem('gistToken');
+  const token = localStorage.getItem('gistToken');
   if (token) {
     try {
       const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
@@ -95,7 +102,7 @@ async function init() {
   applyFn();
 }
 
-function showTokenNotice() {
+export function showTokenNotice() {
   el.tokenWarning.hidden = false;
 }
 
@@ -120,7 +127,7 @@ if (el.tokenForm) {
     e.preventDefault();
     const token = el.tokenInput?.value.trim();
     if (token) {
-      sessionStorage.setItem('gistToken', token);
+      localStorage.setItem('gistToken', token);
       el.tokenDialog?.close();
       location.reload();
     }
