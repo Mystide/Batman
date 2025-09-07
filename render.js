@@ -54,7 +54,7 @@ export function render(state, el) {
       img.fetchpriority = 'low';
       img.decoding = 'async';
       img.src = coverUrl;
-      img.referrerPolicy = 'no-referrer';
+      img.referrerPolicy = 'strict-origin-when-cross-origin';
       img.addEventListener('error', () => {
         img.style.display = 'none';
         const tag = document.createElement('div');
