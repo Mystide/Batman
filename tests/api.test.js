@@ -1,4 +1,11 @@
-import { formatDateDE, shortSeries, normalize } from '../api.js';
+import {
+  formatDateDE,
+  shortSeries,
+  normalize,
+  extractYearFromSeries,
+  escapeHtml,
+  firstOf
+} from '../api.js';
 
 describe('formatDateDE', () => {
   test('formats valid date', () => {
@@ -30,5 +37,27 @@ describe('normalize', () => {
     const result = normalize(item);
     expect(result.year).toBe(2020);
     expect(result.id).toBe('series_(2020)#1-test');
+  });
+});
+
+describe('extractYearFromSeries', () => {
+  test('extracts year', () => {
+    expect(extractYearFromSeries('Series (1999)')).toBe(1999);
+  });
+
+  test('returns empty string for invalid input', () => {
+    expect(extractYearFromSeries('Series')).toBe('');
+  });
+});
+
+describe('escapeHtml', () => {
+  test('escapes special characters', () => {
+    expect(escapeHtml(`&<>"'`)).toBe('&amp;&lt;&gt;&quot;&#39;');
+  });
+});
+
+describe('firstOf', () => {
+  test('returns first non-nullish value', () => {
+    expect(firstOf(null, undefined, '', 'x', 'y')).toBe('x');
   });
 });
