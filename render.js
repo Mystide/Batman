@@ -42,7 +42,7 @@ export function render(state, el) {
       <div class="cover-wrap">
         ${
           x.cover
-            ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" decoding="async"
+            ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="eager" decoding="async"
                  src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer"
                  onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\\'tag\\' style=\\'opacity:.7\\'>Kein Cover</div>');">`
             : '<div class="tag" style="opacity:.7">Kein Cover</div>'
