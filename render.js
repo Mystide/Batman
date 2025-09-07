@@ -1,6 +1,7 @@
 // render.js
 import { formatDateDE, shortSeries, escapeHtml } from './api.js';
 import { GIST_ID, FILE, LS_KEY } from './constants.js';
+import { showTokenNotice } from './app.js';
 
 function isValidUrl(link) {
   const str = String(link || '').trim();
@@ -77,7 +78,7 @@ export function render(state, el) {
       else state.readSet.add(id);
 
       const payload = [...state.readSet];
-      const token = sessionStorage.getItem('gistToken');
+      const token = localStorage.getItem('gistToken');
 
       if (token) {
         fetch(`https://api.github.com/gists/${GIST_ID}`, {
@@ -91,10 +92,19 @@ export function render(state, el) {
           })
         })
           .then(res => {
-            if (!res.ok) throw new Error('Failed');
+            if (res.status === 401 || res.status === 403) {
+              localStorage.removeItem('gistToken');
+              showTokenNotice();
+              throw new Error('Unauthorized');
+            }
+            if (!res.ok) {
+              console.warn('Request failed', res.status);
+              throw new Error('Failed');
+            }
             localStorage.setItem(LS_KEY, JSON.stringify(payload));
           })
-          .catch(() => {
+          .catch(err => {
+            console.warn('Failed to update gist', err);
             localStorage.setItem(LS_KEY, JSON.stringify(payload));
           });
       } else {
