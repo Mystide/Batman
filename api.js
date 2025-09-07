@@ -11,29 +11,49 @@ const DEMO_DATA = [
 export async function loadData(){
   let loaded = false;
   let raw = [];
+
+  // Cache prüfen
   try{
-    const listRes = await fetch(DATA_LIST_URL, {cache:'no-store'});
-    if(listRes.ok){
-      const files = await listRes.json();
-      if(Array.isArray(files) && files.length){
-        const arrays = await Promise.all(
-          files.map(p=> fetch(String(p), {cache:'no-store'}).then(r=> r.ok?r.json():[]).catch(()=>[]))
-        );
-        const merged = arrays.flat();
-        if(merged && merged.length){ raw = merged; loaded = true; }
-      }
+    const cacheStr = localStorage.getItem('data-cache');
+    const cacheTs = Number(localStorage.getItem('data-cache-ts'));
+    if(cacheStr && Date.now() - cacheTs < 86400000){
+      raw = JSON.parse(cacheStr);
+      loaded = Array.isArray(raw) && raw.length > 0;
     }
-  }catch(e){ console.warn('Liste konnte nicht geladen werden', e); }
+  }catch{}
 
   if(!loaded){
     try{
-      const res = await fetch(DATA_FALLBACK_URL, {cache:'no-store'});
-      if(res.ok){
-        const data = await res.json();
-        raw = Array.isArray(data) ? data : (data.items || []);
-        loaded = raw.length>0;
+      const listRes = await fetch(DATA_LIST_URL, {cache:'default'});
+      if(listRes.ok){
+        const files = await listRes.json();
+        if(Array.isArray(files) && files.length){
+          const arrays = await Promise.all(
+            files.map(p=> fetch(String(p), {cache:'default'}).then(r=> r.ok?r.json():[]).catch(()=>[]))
+          );
+          const merged = arrays.flat();
+          if(merged && merged.length){ raw = merged; loaded = true; }
+        }
       }
-    }catch(e){ console.warn('Fallback konnte nicht geladen werden', e); }
+    }catch(e){ console.warn('Liste konnte nicht geladen werden', e); }
+
+    if(!loaded){
+      try{
+        const res = await fetch(DATA_FALLBACK_URL, {cache:'default'});
+        if(res.ok){
+          const data = await res.json();
+          raw = Array.isArray(data) ? data : (data.items || []);
+          loaded = raw.length>0;
+        }
+      }catch(e){ console.warn('Fallback konnte nicht geladen werden', e); }
+    }
+
+    if(loaded){
+      try{
+        localStorage.setItem('data-cache', JSON.stringify(raw));
+        localStorage.setItem('data-cache-ts', String(Date.now()));
+      }catch{}
+    }
   }
 
   if(!loaded){ raw = DEMO_DATA.slice(); }
@@ -92,7 +112,7 @@ export function escapeHtml(s){
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
-    '"': '&quot;',
+    '\"': '&quot;',
     "'": '&#39;'
   }[m]));
 }
