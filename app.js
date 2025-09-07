@@ -1,6 +1,7 @@
 import { loadData, normalize } from './api.js';
 import { buildFilters, bindUI, loadFilters, apply } from './filters.js';
 import { GIST_ID, FILE, LS_KEY, VIEW_KEY } from './constants.js';
+import { showTokenNotice } from './ui.js';
 
 const $ = sel => document.querySelector(sel);
 
@@ -103,11 +104,6 @@ async function init() {
   const applyFn = () => apply(state, el, collator);
   bindUI(el, applyFn);
   applyFn();
-}
-
-export function showTokenNotice() {
-  el.tokenWarning.hidden = false;
-  requestAnimationFrame(updateHeaderHeight);
 }
 
 function showLoadError(msg) {
