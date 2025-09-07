@@ -5,6 +5,23 @@ const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28';
 const FILE = 'readStatus.json';
 const LS_KEY = 'comic-tracker-read';
 
+async function isValidUrl(link) {
+  try {
+    const url = new URL(link);
+    if (typeof fetch === 'function') {
+      try {
+        const res = await fetch(url, { method: 'HEAD' });
+        return res.ok;
+      } catch {
+        return false;
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function updateStats(state, el) {
   const rawIds = state.idSet;
   const read = [...state.readSet].filter(id => rawIds.has(id)).length;
@@ -16,13 +33,14 @@ export function updateStats(state, el) {
   el.count.textContent = String(state.view.length);
 }
 
-export function render(state, el) {
+export async function render(state, el) {
   el.grid.innerHTML = '';
-  state.view.forEach(x => {
+  for (const x of state.view) {
     const isRead = state.readSet.has(x.id);
     const formattedDate = formatDateDE(x.dateRaw, x.year);
     const card = document.createElement('article');
     card.className = 'card';
+    const dcuiValid = await isValidUrl(x.dcui);
     card.innerHTML = `
       <button class="read-toggle ${isRead ? 'active' : ''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}">${isRead ? 'Gelesen' : 'Ungelesen'}</button>
       <div class="cover-wrap">
@@ -35,7 +53,7 @@ export function render(state, el) {
         }
       ${x.year ? `<span class="year-tag">${escapeHtml(String(x.year))}</span>` : ''}
       ${
-          x.dcui
+          dcuiValid
             ? `<a class="dcui-link" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener noreferrer"><img src="dc-logo.png" alt="DC Logo"></a>`
             : ''
         }
@@ -90,7 +108,7 @@ export function render(state, el) {
     });
 
     el.grid.appendChild(card);
-  });
+  }
   updateStats(state, el);
   el.empty.hidden = state.view.length > 0;
 }
