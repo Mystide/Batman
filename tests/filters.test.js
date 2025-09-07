@@ -33,7 +33,7 @@ describe('apply', () => {
 
   beforeEach(() => {
     renderMock.mockClear();
-    global.localStorage = {
+    globalThis.localStorage = {
       store: {},
       setItem(key, value) { this.store[key] = String(value); },
       getItem(key) { return this.store[key] || null; },
