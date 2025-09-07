@@ -5,11 +5,12 @@ const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28';
 const FILE = 'readStatus.json';
 const LS_KEY = 'comic-tracker-read';
 
-function isValidUrl(link) {
+async function isValidUrl(link) {
   if (!link || link === 'null') return false;
   try {
     new URL(link);
-    return true;
+    const res = await fetch(link, { method: 'HEAD' });
+    return res.ok;
   } catch {
     return false;
   }
@@ -19,21 +20,21 @@ export function updateStats(state, el) {
   const rawIds = state.idSet;
   const read = [...state.readSet].filter(id => rawIds.has(id)).length;
   el.readCount.textContent = String(read);
-  the total = state.items.length || 1;
+  const total = state.items.length || 1;
   const pct = Math.min(100, Math.round((read / total) * 100));
   el.progress.style.width = pct + '%';
   el.progress.title = pct + '% abgeschlossen';
   el.count.textContent = String(state.view.length);
 }
 
-export function render(state, el) {
+export async function render(state, el) {
   el.grid.innerHTML = '';
   for (const x of state.view) {
     const isRead = state.readSet.has(x.id);
     const formattedDate = formatDateDE(x.dateRaw, x.year);
     const card = document.createElement('article');
     card.className = 'card';
-    const dcuiValid = isValidUrl(x.dcui);
+    const dcuiValid = await isValidUrl(x.dcui);
     card.innerHTML = `
       <button class="read-toggle ${isRead ? 'active' : ''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}">${isRead ? 'Gelesen' : 'Ungelesen'}</button>
       <div class="cover-wrap">
@@ -41,7 +42,7 @@ export function render(state, el) {
           x.cover
             ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" decoding="async"
                  src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer"
-                 onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\'tag\' style=\'opacity:.7\'>Kein Cover</div>');">`
+                 onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\\'tag\\' style=\\'opacity:.7\\'>Kein Cover</div>');">`
             : '<div class="tag" style="opacity:.7">Kein Cover</div>'
         }
       ${x.year ? `<span class="year-tag">${escapeHtml(String(x.year))}</span>` : ''}
