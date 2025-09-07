@@ -13,7 +13,8 @@ const el = {
   openFilters: $('#openFilters'), drawer: $('#drawer'), closeDrawer: $('#closeDrawer'), closeDrawerBtn: $('#closeDrawerBtn'),
   mResetFilters: $('#mResetFilters'), clearSearch: $('#clearSearch'),
   tokenWarning: $('#tokenWarning'), tokenLink: $('#tokenLink'),
-  tokenDialog: $('#tokenDialog'), tokenForm: $('#tokenForm'), tokenInput: $('#tokenInput')
+  tokenDialog: $('#tokenDialog'), tokenForm: $('#tokenForm'), tokenInput: $('#tokenInput'),
+  loadError: $('#loadError')
 };
 
 const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
@@ -40,7 +41,7 @@ updateViewToggle();
 init();
 
 async function init() {
-  const token = localStorage.getItem('gistToken');
+  const token = sessionStorage.getItem('gistToken');
   if (token) {
     try {
       const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
@@ -56,10 +57,12 @@ async function init() {
         showTokenNotice();
       } else {
         console.warn('Request failed', res.status);
+        showLoadError('Fehler beim Laden des Lesestatus.');
       }
     } catch (err) {
       console.warn('Failed to fetch gist', err);
       showTokenNotice();
+      showLoadError('Fehler beim Laden des Lesestatus.');
     }
   } else {
     showTokenNotice();
@@ -85,6 +88,13 @@ function showTokenNotice() {
   el.tokenWarning.hidden = false;
 }
 
+function showLoadError(msg) {
+  if (el.loadError) {
+    el.loadError.textContent = msg;
+    el.loadError.hidden = false;
+  }
+}
+
 el.tokenLink.addEventListener('click', e => {
   e.preventDefault();
   el.tokenDialog.showModal();
@@ -94,7 +104,7 @@ el.tokenForm.addEventListener('submit', e => {
   e.preventDefault();
   const token = el.tokenInput.value.trim();
   if (token) {
-    localStorage.setItem('gistToken', token);
+    sessionStorage.setItem('gistToken', token);
     el.tokenDialog.close();
     location.reload();
   }
