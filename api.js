@@ -48,7 +48,7 @@ export async function loadData() {
       raw = JSON.parse(cacheStr);
       loaded = Array.isArray(raw) && raw.length > 0;
     }
-  } catch {}
+ } catch { /* empty */ }
 
   if (!loaded) {
     try {
@@ -91,7 +91,7 @@ export async function loadData() {
       try {
         localStorage.setItem('data-cache', JSON.stringify(raw));
         localStorage.setItem('data-cache-ts', String(Date.now()));
-      } catch {}
+  } catch { /* empty */ }
     }
   }
 
@@ -192,13 +192,13 @@ export function shortSeries(s) {
 
 export function escapeHtml(s) {
   return String(s).replace(
-    /[&<>\"']/g,
+    /[&<>"']/g,
     (m) =>
       ({
         '&': '&amp;',
         '<': '&lt;',
         '>': '&gt;',
-        '\"': '&quot;',
+        '"': '&quot;',
         "'": '&#39;',
       })[m],
   );
