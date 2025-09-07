@@ -102,10 +102,6 @@ el.tokenForm.addEventListener('submit', e => {
 
 el.toggleView.addEventListener('click', () => {
   const isCover = document.body.classList.toggle('cover-mode');
-  const img = el.toggleView.querySelector('img');
-  if (img) {
-    img.classList.toggle('flipped');
-  }
   localStorage.setItem(VIEW_KEY, isCover ? 'cover' : 'list');
   updateViewToggle();
 });
