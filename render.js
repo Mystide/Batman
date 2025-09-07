@@ -80,7 +80,7 @@ export function render(state, el) {
       else state.readSet.add(id);
 
       const payload = [...state.readSet];
-      const token = localStorage.getItem('gistToken');
+      const token = sessionStorage.getItem('gistToken');
 
       if (token) {
         fetch(`https://api.github.com/gists/${GIST_ID}`, {
