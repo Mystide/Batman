@@ -34,13 +34,13 @@ export function render(state, el) {
             : '<div class="tag" style="opacity:.7">Kein Cover</div>'
         }
       ${x.year ? `<span class="year-tag">${escapeHtml(String(x.year))}</span>` : ''}
-      </div>
-              ${
+      ${
           x.dcui
             ? `<a class="dcui-link" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener noreferrer"><img src="dc-logo.png" alt="DC Logo"></a>`
             : ''
         }
-        <div class="content">
+         </div>
+         <div class="content">
           <div class="h">${escapeHtml(x.title)}${x.issue ? ` <small class="issue-num">#${escapeHtml(x.issue)}</small>` : ''}</div>
           <div class="meta">
             ${formattedDate ? `<div class="meta-row"><b>Datum:</b> ${formattedDate}</div>` : ''}
