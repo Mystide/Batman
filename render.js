@@ -15,26 +15,25 @@ function isValidUrl(link) {
   }
 }
 
-
 export function updateStats(state, el) {
   const rawIds = state.idSet;
   const read = [...state.readSet].filter(id => rawIds.has(id)).length;
   el.readCount.textContent = String(read);
-  const total = state.items.length || 1;
+  the total = state.items.length || 1;
   const pct = Math.min(100, Math.round((read / total) * 100));
   el.progress.style.width = pct + '%';
   el.progress.title = pct + '% abgeschlossen';
   el.count.textContent = String(state.view.length);
 }
 
-export async function render(state, el) {
+export function render(state, el) {
   el.grid.innerHTML = '';
   for (const x of state.view) {
     const isRead = state.readSet.has(x.id);
     const formattedDate = formatDateDE(x.dateRaw, x.year);
     const card = document.createElement('article');
     card.className = 'card';
-    const dcuiValid = await isValidUrl(x.dcui);
+    const dcuiValid = isValidUrl(x.dcui);
     card.innerHTML = `
       <button class="read-toggle ${isRead ? 'active' : ''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}">${isRead ? 'Gelesen' : 'Ungelesen'}</button>
       <div class="cover-wrap">
@@ -42,7 +41,7 @@ export async function render(state, el) {
           x.cover
             ? `<img class="cover" alt="${escapeHtml(x.title)} Cover" loading="lazy" decoding="async"
                  src="${escapeHtml(x.cover)}" referrerpolicy="no-referrer"
-                 onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\\'tag\\' style=\\'opacity:.7\\'>Kein Cover</div>');">`
+                 onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\'tag\' style=\'opacity:.7\'>Kein Cover</div>');">`
             : '<div class="tag" style="opacity:.7">Kein Cover</div>'
         }
       ${x.year ? `<span class="year-tag">${escapeHtml(String(x.year))}</span>` : ''}
@@ -51,15 +50,15 @@ export async function render(state, el) {
             ? `<a class="dcui-link" href="${escapeHtml(x.dcui)}" target="_blank" rel="noopener noreferrer"><img src="dc-logo.png" alt="DC Logo"></a>`
             : ''
         }
-         </div>
-         <div class="content">
-          <div class="h">${escapeHtml(x.title)}${x.issue ? ` <small class="issue-num">#${escapeHtml(x.issue)}</small>` : ''}</div>
-          <div class="meta">
-            ${formattedDate ? `<div class="meta-row"><b>Datum:</b> ${formattedDate}</div>` : ''}
-            ${x.series ? `<div class="meta-row"><b>Serie:</b><span>${escapeHtml(shortSeries(x.series))}</span></div>` : ''}
-            ${x.event ? `<div class="meta-row"><b>Event:</b> ${escapeHtml(x.event)}</div>` : ''}
-          </div>
-        </div>`;
+       </div>
+       <div class="content">
+        <div class="h">${escapeHtml(x.title)}${x.issue ? ` <small class="issue-num">#${escapeHtml(x.issue)}</small>` : ''}</div>
+        <div class="meta">
+          ${formattedDate ? `<div class="meta-row"><b>Datum:</b> ${formattedDate}</div>` : ''}
+          ${x.series ? `<div class="meta-row"><b>Serie:</b><span>${escapeHtml(shortSeries(x.series))}</span></div>` : ''}
+          ${x.event ? `<div class="meta-row"><b>Event:</b> ${escapeHtml(x.event)}</div>` : ''}
+        </div>
+      </div>`;
 
     const btn = card.querySelector('.read-toggle');
     btn.addEventListener('click', () => {
