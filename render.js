@@ -29,12 +29,13 @@ export function updateStats(state, el) {
 
 export function render(state, el) {
   el.grid.innerHTML = '';
+  const toValidate = [];
   for (const x of state.view) {
     const isRead = state.readSet.has(x.id);
     const formattedDate = formatDateDE(x.dateRaw, x.year);
     const card = document.createElement('article');
     card.className = 'card';
-    const dcuiUrl = String(x.dcui || '').trim();
+    const dcuiUrl = String(x.dcui || x.dcui_link || '').trim();
     const dcuiValid = isValidUrl(dcuiUrl);
     card.innerHTML = `
       <button class="read-toggle ${isRead ? 'active' : ''}" aria-pressed="${isRead}" data-id="${escapeHtml(x.id)}">${isRead ? 'Gelesen' : 'Ungelesen'}</button>
@@ -106,13 +107,17 @@ export function render(state, el) {
 
     if (dcuiValid) {
       const linkEl = card.querySelector('.dcui-link');
-      fetch(dcuiUrl, { method: 'HEAD' })
-        .then(res => {
-          if (!res.ok) linkEl.remove();
-        })
-        .catch(() => linkEl.remove());
+      toValidate.push({ el: linkEl, url: dcuiUrl });
     }
   }
   updateStats(state, el);
   el.empty.hidden = state.view.length > 0;
+
+  for (const { el: linkEl, url } of toValidate) {
+    fetch(url, { method: 'HEAD' })
+      .then(res => {
+        if (!res.ok) linkEl.remove();
+      })
+      .catch(() => linkEl.remove());
+  }
 }
