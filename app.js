@@ -23,6 +23,11 @@ const FILE = 'readStatus.json';
 const LS_KEY = 'comic-tracker-read';
 const VIEW_KEY = 'comic-tracker-view';
 
+function updateHeaderHeight() {
+  const h = document.querySelector('header')?.offsetHeight || 0;
+  document.documentElement.style.setProperty('--header-h', `${h}px`);
+}
+
 function updateViewToggle() {
   const isCover = document.body.classList.contains('cover-mode');
   const imgEl = el.toggleView.querySelector('img');
@@ -37,6 +42,8 @@ if (localStorage.getItem(VIEW_KEY) === 'cover') {
   document.body.classList.add('cover-mode');
 }
 updateViewToggle();
+updateHeaderHeight();
+window.addEventListener('resize', updateHeaderHeight);
 
 init();
 
