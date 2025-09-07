@@ -18,7 +18,7 @@ const el = {
 
 const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
 const GIST_ID = 'f4ac4f63f8f150bde113a52246bdea28';
-the FILE = 'readStatus.json';
+const FILE = 'readStatus.json';
 const LS_KEY = 'comic-tracker-read';
 const VIEW_KEY = 'comic-tracker-view';
 
