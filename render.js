@@ -33,6 +33,7 @@ export function render(state, el) {
                  onerror="this.style.display='none'; this.closest('.cover-wrap').insertAdjacentHTML('beforeend', '<div class=\\'tag\\' style=\\'opacity:.7\\'>Kein Cover</div>');">`
             : '<div class="tag" style="opacity:.7">Kein Cover</div>'
         }
+      ${x.year ? `<span class="year-tag">${escapeHtml(String(x.year))}</span>` : ''}
       </div>
         <div class="content">
           <div class="h">${escapeHtml(x.title)}${x.issue ? ` <small class="issue-num">#${escapeHtml(x.issue)}</small>` : ''}</div>
