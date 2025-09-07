@@ -24,7 +24,10 @@ const VIEW_KEY = 'comic-tracker-view';
 
 function updateViewToggle() {
   const isCover = document.body.classList.contains('cover-mode');
-  el.toggleView.textContent = isCover ? '🖼' : '🗖';
+  const useEl = el.toggleView.querySelector('use');
+  if (useEl) {
+    useEl.setAttribute('href', `icons/icons.svg#icon-${isCover ? 'cover' : 'list'}`);
+  }
   el.toggleView.classList.toggle('cover-mode-active', isCover);
   el.toggleView.setAttribute('aria-pressed', String(isCover));
 }
