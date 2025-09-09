@@ -38,6 +38,18 @@ describe('normalize', () => {
     expect(result.year).toBe(2020);
     expect(result.id).toBe('series_(2020)#1-test');
   });
+  
+  test('converts character string to array', () => {
+    const item = { title: 'Test', characters: 'Batman, Joker, , Catwoman ' };
+    const result = normalize(item);
+    expect(result.characters).toEqual(['Batman', 'Joker', 'Catwoman']);
+  });
+
+  test('trims character array entries', () => {
+    const item = { title: 'Test', characters: [' Batman', 'Joker ', '', ''] };
+    const result = normalize(item);
+    expect(result.characters).toEqual(['Batman', 'Joker']);
+  });
 });
 
 describe('extractYearFromSeries', () => {
