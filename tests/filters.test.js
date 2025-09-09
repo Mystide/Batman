@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { normalize } from '../src/api.js';
 
 const renderMock = jest.fn();
 await jest.unstable_mockModule('../src/render.js', () => ({ render: renderMock }));
@@ -57,5 +58,23 @@ describe('apply', () => {
     el.mchar.value = 'Joker';
     apply(state, el, new Intl.Collator('de'));
     expect(state.view.map(x => x.id)).toEqual(['2']);
+  });
+  
+  test('filters by character with mixed input types', () => {
+    const raw = [
+      { id: '1', title: 'Item1', characters: 'Batman, Joker' },
+      { id: '2', title: 'Item2', characters: ['Batman', 'Robin'] }
+    ];
+    const items = raw.map(normalize);
+    const state = {
+      items,
+      view: [],
+      readSet: new Set(),
+      idSet: new Set(items.map(x => x.id))
+    };
+    const el = createEl();
+    el.mchar.value = 'Joker';
+    apply(state, el, new Intl.Collator('de'));
+    expect(state.view.map(x => x.id)).toEqual(['1']);
   });
 });
