@@ -1,31 +1,19 @@
 const CACHE_VERSION = 'v1';
 const CACHE_NAME = `batman-cache-${CACHE_VERSION}`;
 
-const ASSETS = [
-  '/',
-  'index.html',
-  'styles.css',
-  'constants.js',
-  'ui.js',
-  'src/app.js',
-  'src/api.js',
-  'src/demo-data.js',
-  'src/filters.js',
-  'src/render.js',
-  'icons/batman-logo.png',
-  'icons/dc-logo.png',
-  'icons/light-switch.png',
-  'data/batman(1940-2011).json',
-  'data/batman_the_monster_men(2005-2006).json',
-  'data/detective_comics(1937-2011).json',
-  'data/worlds_finest_comics(1941-1986).json',
-  'data/list.json'
-];
+// The list of assets to precache is generated during the build step
+// (e.g. via Workbox's `injectManifest` or a custom manifest file).
+// Development-only files such as `src/demo-data.js` should not be included.
+const ASSETS = (self.__WB_MANIFEST || []).filter(asset => {
+  const url = typeof asset === 'string' ? asset : asset.url;
+  return !/src\/demo-data\.js$/.test(url);
+});
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
@@ -34,6 +22,7 @@ self.addEventListener('activate', event => {
       keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
     ))
   );
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', event => {
