@@ -24,7 +24,73 @@ export function updateStats(state, el) {
   el.count.textContent = String(state.view.length);
 }
 
+let currentState;
+let currentEl;
+
+function handleToggle(btn, state, el) {
+  const id = btn.dataset.id;
+  const wasRead = state.readSet.has(id);
+  if (wasRead) state.readSet.delete(id);
+  else state.readSet.add(id);
+
+  const payload = [...state.readSet];
+  const token = localStorage.getItem('gistToken');
+
+  if (token) {
+    fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `token ${token}`
+      },
+      body: JSON.stringify({
+        files: { [FILE]: { content: JSON.stringify(payload) } }
+      })
+    })
+      .then(res => {
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem('gistToken');
+          showTokenNotice();
+          throw new Error('Unauthorized');
+        }
+        if (!res.ok) {
+          console.warn('Request failed', res.status);
+          throw new Error('Failed');
+        }
+        localStorage.setItem(LS_KEY, JSON.stringify(payload));
+      })
+      .catch(err => {
+        console.warn('Failed to update gist', err);
+        localStorage.setItem(LS_KEY, JSON.stringify(payload));
+      });
+  } else {
+    localStorage.setItem(LS_KEY, JSON.stringify(payload));
+  }
+
+  const nowRead = state.readSet.has(id);
+  btn.classList.toggle('active', nowRead);
+  btn.setAttribute('aria-pressed', nowRead);
+  btn.textContent = nowRead ? 'Gelesen' : 'Ungelesen';
+
+  if (el.quickHideRead && el.quickHideRead.checked && nowRead) {
+    const card = btn.closest('.card');
+    card?.remove();
+    updateStats(state, el);
+    return;
+  }
+  updateStats(state, el);
+}
+
+function onGridClick(event) {
+  const btn = event.target.closest('.read-toggle');
+  if (!btn) return;
+  handleToggle(btn, currentState, currentEl);
+}
+
 export function render(state, el) {
+  currentState = state;
+  currentEl = el;
+  el.grid.addEventListener('click', onGridClick);
   el.grid.innerHTML = '';
   const fragment = document.createDocumentFragment();
   for (const x of state.view) {
@@ -140,60 +206,6 @@ export function render(state, el) {
     }
     content.appendChild(meta);
     card.appendChild(content);
-
-    toggle.addEventListener('click', () => {
-      const id = x.id;
-      const wasRead = state.readSet.has(id);
-      if (wasRead) state.readSet.delete(id);
-      else state.readSet.add(id);
-
-      const payload = [...state.readSet];
-      const token = localStorage.getItem('gistToken');
-
-      if (token) {
-        fetch(`https://api.github.com/gists/${GIST_ID}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `token ${token}`
-          },
-          body: JSON.stringify({
-            files: { [FILE]: { content: JSON.stringify(payload) } }
-          })
-        })
-          .then(res => {
-            if (res.status === 401 || res.status === 403) {
-              localStorage.removeItem('gistToken');
-              showTokenNotice();
-              throw new Error('Unauthorized');
-            }
-            if (!res.ok) {
-              console.warn('Request failed', res.status);
-              throw new Error('Failed');
-            }
-            localStorage.setItem(LS_KEY, JSON.stringify(payload));
-          })
-          .catch(err => {
-            console.warn('Failed to update gist', err);
-            localStorage.setItem(LS_KEY, JSON.stringify(payload));
-          });
-      } else {
-        localStorage.setItem(LS_KEY, JSON.stringify(payload));
-      }
-
-      const nowRead = state.readSet.has(id);
-      toggle.classList.toggle('active', nowRead);
-      toggle.setAttribute('aria-pressed', nowRead);
-      toggle.textContent = nowRead ? 'Gelesen' : 'Ungelesen';
-
-      if (el.quickHideRead && el.quickHideRead.checked && nowRead) {
-        card.remove();
-        updateStats(state, el);
-        return;
-      }
-      updateStats(state, el);
-    });
-
     fragment.appendChild(card);
   }
   el.grid.appendChild(fragment);
