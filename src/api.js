@@ -60,7 +60,7 @@ export async function loadData() {
             files.map((p) =>
                 fetch(new URL(p, base).href, { cache: 'default' })
                 .then((r) => (r.ok ? r.json() : []))
-                .catch(() => []),
+                .catch((err) => (console.warn('failed to load', p, err), [])),
             ),
           );
           const merged = arrays.flat();
