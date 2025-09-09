@@ -9,13 +9,7 @@ export function buildFilters(state, el){
   ).sort(collator.compare);
   const byEvent = Array.from(new Set(items.map(x => x.event).filter(Boolean))).sort();
   const byYear = new Set(items.map(x => x.year).filter(y => y !== '' && !Number.isNaN(Number(y))));
-  const byChar = Array.from(new Set(items.flatMap(x => {
-    const chars = x.characters;
-    if (!chars) return [];
-    if (Array.isArray(chars)) return chars;
-    if (typeof chars === 'string') return chars.split(',').map(c => c.trim()).filter(Boolean);
-    return [];
-  }))).sort();
+  const byChar = Array.from(new Set(items.flatMap(x => x.characters || []))).sort();
   fillSelect(el.mseries, ['Alle Serien', ...bySeries]);
   fillSelect(el.mevent, ['Alle Events', ...byEvent]);
   fillSelect(el.myear, ['Alle Jahre', ...Array.from(byYear).map(Number).sort((a,b)=>a-b).map(String)]);
@@ -42,7 +36,7 @@ export function apply(state, el, collator){
     if(fSeries && x.series!==fSeries) return false;
     if(fYear && String(x.year)!==String(fYear)) return false;
     if(fEvent && x.event!==fEvent) return false;
-    if(fChar && !(x.characters||[]).includes(fChar)) return false;
+    if(fChar && !x.characters?.includes(fChar)) return false;
     if(hideRead && state.readSet.has(x.id)) return false;
     if(tokens.length && !tokens.every(tok=>x.search.includes(tok))) return false;
     return true;
