@@ -1,40 +1,5 @@
 export const DATA_LIST_URL = new URL('../data/list.json', import.meta.url).href;
 
-const DEMO_DATA = [
-  {
-    id: 'batman_year_one',
-    title: 'Batman 1',
-    issue: '1',
-    year: 1987,
-    series: 'Batman (1987)',
-    cover: 'https://upload.wikimedia.org/wikipedia/en/3/3d/Batman_404.png',
-    event: 'Year One',
-    date: '1987-02-01',
-  },
-  {
-    id: 'killing_joke',
-    title: 'Batman 10',
-    issue: '10',
-    year: 1988,
-    series: 'One-Shot (1988)',
-    cover:
-      'https://upload.wikimedia.org/wikipedia/en/9/9b/Batman_the_killing_joke.jpg',
-    event: 'Killing Joke',
-    date: '1988-03-29',
-  },
-  {
-    id: 'hush_608',
-    title: 'Batman 100',
-    issue: '100',
-    year: 2002,
-    series: 'Batman (2002)',
-    cover:
-      'https://upload.wikimedia.org/wikipedia/en/9/9f/Batman_Hush_cover.jpg',
-    event: 'Hush',
-    date: '2002-10-01',
-  },
-];
-
 export async function loadData() {
   let loaded = false;
   let raw = [];
@@ -47,7 +12,7 @@ export async function loadData() {
       raw = JSON.parse(cacheStr);
       loaded = Array.isArray(raw) && raw.length > 0;
     }
- } catch { /* empty */ }
+  } catch { /* empty */ }
 
   if (!loaded) {
     try {
@@ -58,7 +23,7 @@ export async function loadData() {
           const base = new URL('.', DATA_LIST_URL);
           const arrays = await Promise.all(
             files.map((p) =>
-                fetch(new URL(p, base).href, { cache: 'default' })
+              fetch(new URL(p, base).href, { cache: 'default' })
                 .then((r) => (r.ok ? r.json() : []))
                 .catch((err) => (console.warn('failed to load', p, err), [])),
             ),
@@ -78,12 +43,19 @@ export async function loadData() {
       try {
         localStorage.setItem('data-cache', JSON.stringify(raw));
         localStorage.setItem('data-cache-ts', String(Date.now()));
-  } catch { /* empty */ }
+    } catch { /* empty */ }
     }
   }
 
   if (!loaded) {
-    raw = DEMO_DATA.slice();
+     try {
+      const demoModule = await import('./demo-data.js');
+      raw = Array.isArray(demoModule.default)
+        ? demoModule.default.slice()
+        : [];
+    } catch {
+      raw = [];
+    }
   }
 
   const seen = new Set();
