@@ -1,4 +1,4 @@
-export const DATA_LIST_URL = './data/list.json';
+export const DATA_LIST_URL = new URL('../data/list.json', import.meta.url);
 
 const DEMO_DATA = [
   {
