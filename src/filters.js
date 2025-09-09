@@ -1,5 +1,4 @@
 import { render } from './render.js';
-import { escapeHtml } from './api.js';
 
 export function buildFilters(state, el){
   const items = state.items;
@@ -16,14 +15,13 @@ export function buildFilters(state, el){
   if (el.mchar) fillSelect(el.mchar, ['Alle Figuren', ...byChar]);
 }
 
-function fillSelect(sel,items){
-  sel.innerHTML = items
-    .map((v,i) => {
-      const text = escapeHtml(String(v));
-      const value = i ? escapeHtml(String(v)) : '';
-      return `<option value="${value}">${text}</option>`;
-    })
-    .join('');
+function fillSelect(sel, items) {
+  sel.textContent = '';
+  items.forEach((v, i) => {
+    const text = String(v);
+    const value = i ? String(v) : '';
+    sel.appendChild(new Option(text, value));
+  });
 }
 
 export function apply(state, el, collator){
