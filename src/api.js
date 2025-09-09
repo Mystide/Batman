@@ -187,6 +187,6 @@ export function escapeHtml(s) {
         '>': '&gt;',
         '"': '&quot;',
         "'": '&#39;',
-      })[m],
+      })[m]
   );
 }
