@@ -3,6 +3,14 @@ import { buildFilters, bindUI, loadFilters, apply } from './filters.js';
 import { GIST_ID, FILE, LS_KEY, VIEW_KEY } from '../constants.js';
 import { showTokenNotice } from '../ui.js';
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => {
+      console.warn('Service worker registration failed', err);
+    });
+  });
+}
+
 const $ = sel => document.querySelector(sel);
 
 const state = { raw: [], items: [], view: [], readSet: new Set(), idSet: new Set() };
