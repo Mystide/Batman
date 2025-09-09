@@ -1,7 +1,7 @@
 import { loadData, normalize } from './api.js';
 import { buildFilters, bindUI, loadFilters, apply } from './filters.js';
-import { GIST_ID, FILE, LS_KEY, VIEW_KEY } from './constants.js';
-import { showTokenNotice } from './ui.js';
+import { GIST_ID, FILE, LS_KEY, VIEW_KEY } from '../constants.js';
+import { showTokenNotice } from '../ui.js';
 
 const $ = sel => document.querySelector(sel);
 
