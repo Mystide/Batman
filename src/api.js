@@ -55,9 +55,10 @@ export async function loadData() {
       if (listRes.ok) {
         const files = await listRes.json();
         if (Array.isArray(files) && files.length) {
+          const base = new URL('.', DATA_LIST_URL);
           const arrays = await Promise.all(
             files.map((p) =>
-                fetch(new URL(p, DATA_LIST_URL).href, { cache: 'default' })
+                fetch(new URL(p, base).href, { cache: 'default' })
                 .then((r) => (r.ok ? r.json() : []))
                 .catch(() => []),
             ),
