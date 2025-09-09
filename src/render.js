@@ -6,8 +6,8 @@ function isValidUrl(link) {
   const str = String(link || '').trim();
   if (str === 'null' || !str) return false;
   try {
-    new URL(str);
-    return true;
+    const url = new URL(str);
+    return url.protocol === 'http:' || url.protocol === 'https:';
   } catch {
     return false;
   }
