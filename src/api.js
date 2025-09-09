@@ -102,6 +102,14 @@ export function buildSearchString(item) {
 
 export function normalize(item) {
   const { dcui_link, dcui, ...rest } = item;
+  const charRaw = rest.characters;
+  let characters = [];
+  if (typeof charRaw === 'string') {
+    characters = charRaw.split(',').map((c) => c.trim()).filter(Boolean);
+  } else if (Array.isArray(charRaw)) {
+    characters = charRaw.map((c) => String(c).trim()).filter(Boolean);
+  }
+  rest.characters = characters;
   const dateRaw = firstOf(
     rest.date,
     rest.release_date,
