@@ -1,6 +1,6 @@
 import { formatDateDE, shortSeries } from './api.js';
-import { GIST_ID, FILE, LS_KEY } from './constants.js';
-import { showTokenNotice } from './ui.js';
+import { GIST_ID, FILE, LS_KEY } from '../constants.js';
+import { showTokenNotice } from '../ui.js';
 
 function isValidUrl(link) {
   const str = String(link || '').trim();
