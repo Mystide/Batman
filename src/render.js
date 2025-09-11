@@ -26,6 +26,7 @@ export function updateStats(state, el) {
 
 let currentState;
 let currentEl;
+let currentGrid;
 
 function handleToggle(btn, state, el) {
   const id = btn.dataset.id;
@@ -90,7 +91,13 @@ function onGridClick(event) {
 export function render(state, el) {
   currentState = state;
   currentEl = el;
-  el.grid.addEventListener('click', onGridClick);
+  
+  if (currentGrid !== el.grid) {
+    if (currentGrid) currentGrid.removeEventListener('click', onGridClick);
+    currentGrid = el.grid;
+    currentGrid.addEventListener('click', onGridClick);
+  }
+
   el.grid.innerHTML = '';
   const fragment = document.createDocumentFragment();
   for (const x of state.view) {
@@ -211,4 +218,13 @@ export function render(state, el) {
   el.grid.appendChild(fragment);
   updateStats(state, el);
   el.empty.hidden = state.view.length > 0;
+}
+
+export function cleanup() {
+  if (currentGrid) {
+    currentGrid.removeEventListener('click', onGridClick);
+    currentGrid = null;
+  }
+  currentEl = undefined;
+  currentState = undefined;
 }
