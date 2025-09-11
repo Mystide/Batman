@@ -25,7 +25,8 @@ const el = {
   tokenWarning: $('#tokenWarning'), tokenLink: $('#tokenLink'),
   tokenDialog: $('#tokenDialog'), tokenForm: $('#tokenForm'), tokenInput: $('#tokenInput'),
   loadError: $('#loadError'),
-  offlineBanner: $('#offlineBanner')
+  offlineBanner: $('#offlineBanner'),
+  toTop: $('#toTop')
 };
 
 const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
@@ -164,4 +165,15 @@ if (el.toggleView) {
   });
 } else {
   console.warn('Missing toggleView element');
+}
+
+if (el.toTop) {
+  window.addEventListener('scroll', () => {
+    el.toTop.classList.toggle('show', window.scrollY > 400);
+  });
+  el.toTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+} else {
+  console.warn('Missing toTop element');
 }
