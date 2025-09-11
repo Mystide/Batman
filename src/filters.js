@@ -79,7 +79,8 @@ function drawer(el, open){ el.drawer.classList.toggle('open',open); document.bod
 
 export function saveFilters(el){
   const p={ q:el.mq.value||'', series:el.mseries.value||'', year:el.myear.value||'', event:el.mevent.value||'', char:el.mchar?el.mchar.value:'', sort:el.msort.value||'dateAsc', hide:!!(el.quickHideRead&&el.quickHideRead.checked) };
-  try { localStorage.setItem('bat-filters', JSON.stringify(p)); } catch (e) { /* empty */ }
+  try { localStorage.setItem('bat-filters', JSON.stringify(p)); }
+  catch (e) { console.warn('Failed to save filters:', e); }
 }
 
 export function loadFilters(el){
@@ -93,5 +94,9 @@ export function loadFilters(el){
     if('char'in p && el.mchar) el.mchar.value=p.char||'';
     if('sort'in p) el.msort.value=p.sort||'dateAsc';
     if('hide'in p && el.quickHideRead){ el.quickHideRead.checked=!!p.hide; }
-  } catch (e) { /* empty */ }
+  }
+  catch (e) {
+    console.warn('Failed to load filters:', e);
+    if (e instanceof SyntaxError) { localStorage.removeItem('bat-filters'); }
+  }
 }
