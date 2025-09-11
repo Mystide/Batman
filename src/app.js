@@ -24,7 +24,8 @@ const el = {
   mResetFilters: $('#mResetFilters'), clearSearch: $('#clearSearch'),
   tokenWarning: $('#tokenWarning'), tokenLink: $('#tokenLink'),
   tokenDialog: $('#tokenDialog'), tokenForm: $('#tokenForm'), tokenInput: $('#tokenInput'),
-  loadError: $('#loadError')
+  loadError: $('#loadError'),
+  offlineBanner: $('#offlineBanner')
 };
 
 const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
@@ -32,8 +33,9 @@ const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' })
 function updateHeaderHeight() {
   const warning = el.tokenWarning?.offsetHeight || 0;
   const error   = el.loadError?.offsetHeight || 0;
+  const offline = el.offlineBanner?.offsetHeight || 0;
   const header  = document.querySelector('header')?.offsetHeight || 0;
-  document.documentElement.style.setProperty('--header-h', `${warning + error + header}px`);
+  document.documentElement.style.setProperty('--header-h', `${warning + error + offline + header}px`);
 }
 
 function updateViewToggle() {
@@ -46,13 +48,22 @@ function updateViewToggle() {
   el.toggleView?.setAttribute('aria-pressed', String(isCover));
 }
 
+function updateOfflineBanner() {
+  if (el.offlineBanner) {
+    el.offlineBanner.hidden = navigator.onLine;
+  }
+  updateHeaderHeight();
+}
+
 if (localStorage.getItem(VIEW_KEY) === 'cover') {
   document.body.classList.add('cover-mode');
 }
 updateViewToggle();
-updateHeaderHeight();
+updateOfflineBanner();
 window.addEventListener('resize', updateHeaderHeight);
 window.addEventListener('load', updateHeaderHeight);
+window.addEventListener('offline', updateOfflineBanner);
+window.addEventListener('online', updateOfflineBanner);
 
 // Migrate legacy sessionStorage token to localStorage
 const legacyToken = sessionStorage.getItem('gistToken');
