@@ -90,6 +90,7 @@ export function extractYearFromSeries(series) {
 export function generateId({ id, series, issue, title }) {
   return (id || `${series || ''}#${issue || ''}-${title || ''}`)
     .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '_')
     .replace(/\s+/g, '_');
 }
 
