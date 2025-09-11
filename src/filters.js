@@ -1,4 +1,4 @@
-import { render } from './render.js';
+import { render, sortItems } from './render.js';
 
 export function buildFilters(state, el){
   const items = state.items;
@@ -24,7 +24,7 @@ function fillSelect(sel, items) {
   });
 }
 
-export function apply(state, el, collator){
+export function apply(state, el){
   const q=(el.mq.value||'').toLowerCase().trim();
   const tokens = q ? q.split(/\s+/) : [];
   const fSeries=el.mseries.value; const fYear=el.myear.value; const fEvent=el.mevent.value; const fChar=el.mchar?el.mchar.value:'';
@@ -40,14 +40,8 @@ export function apply(state, el, collator){
     return true;
   });
 
-  switch(el.msort.value){
-    case'dateAsc':items.sort((a,b)=>a.ts-b.ts||collator.compare(a.title,b.title));break;
-    case'dateDesc':items.sort((a,b)=>b.ts-a.ts||collator.compare(a.title,b.title));break;
-    case'titleAsc':items.sort((a,b)=>collator.compare(a.title,b.title));break;
-    case'titleDesc':items.sort((a,b)=>collator.compare(b.title,a.title));break;
-  }
-
-  state.view=items;
+  const order = el.sortOrder ? el.sortOrder.value : 'title';
+  state.view = sortItems(items, order);
   saveFilters(el);
   render(state, el);
 }
@@ -65,12 +59,12 @@ export function bindUI(el, applyFn){
   });
 
   el.mResetFilters?.addEventListener('click',()=>{
-    el.mseries.value=''; el.myear.value=''; el.mevent.value=''; if(el.mchar) el.mchar.value=''; el.msort.value='dateAsc';
+    el.mseries.value=''; el.myear.value=''; el.mevent.value=''; if(el.mchar) el.mchar.value=''; el.sortOrder.value='title';
     el.mq.value=''; if(el.quickHideRead) el.quickHideRead.checked=false; applyFn();
   });
   el.clearSearch?.addEventListener('click',()=>{ el.mq.value=''; applyFn(); el.mq.focus(); });
 
-  [el.mq, el.mseries, el.myear, el.mevent, el.mchar, el.msort]
+  [el.mq, el.mseries, el.myear, el.mevent, el.mchar, el.sortOrder]
     .forEach(c=>c && c.addEventListener('input', applyFn));
   el.quickHideRead?.addEventListener('input', applyFn);
 }
@@ -78,7 +72,7 @@ export function bindUI(el, applyFn){
 function drawer(el, open){ el.drawer.classList.toggle('open',open); document.body.classList.toggle('no-scroll',open); }
 
 export function saveFilters(el){
-  const p={ q:el.mq.value||'', series:el.mseries.value||'', year:el.myear.value||'', event:el.mevent.value||'', char:el.mchar?el.mchar.value:'', sort:el.msort.value||'dateAsc', hide:!!(el.quickHideRead&&el.quickHideRead.checked) };
+  const p={ q:el.mq.value||'', series:el.mseries.value||'', year:el.myear.value||'', event:el.mevent.value||'', char:el.mchar?el.mchar.value:'', sortOrder:el.sortOrder.value||'title', hide:!!(el.quickHideRead&&el.quickHideRead.checked) };
   try { localStorage.setItem('bat-filters', JSON.stringify(p)); }
   catch (e) { console.warn('Failed to save filters:', e); }
 }
@@ -92,7 +86,7 @@ export function loadFilters(el){
     if('year'in p) el.myear.value=p.year||'';
     if('event'in p) el.mevent.value=p.event||'';
     if('char'in p && el.mchar) el.mchar.value=p.char||'';
-    if('sort'in p) el.msort.value=p.sort||'dateAsc';
+    if('sortOrder'in p) el.sortOrder.value=p.sortOrder||'title';
     if('hide'in p && el.quickHideRead){ el.quickHideRead.checked=!!p.hide; }
   }
   catch (e) {
