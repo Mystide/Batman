@@ -469,3 +469,14 @@ main.container {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+#toTop {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  display: none;
+}
+
+#toTop.show {
+  display: block;
+}
