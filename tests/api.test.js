@@ -4,7 +4,8 @@ import {
   normalize,
   extractYearFromSeries,
   escapeHtml,
-  firstOf
+  firstOf,
+  generateId
 } from '../src/api.js';
 
 describe('formatDateDE', () => {
@@ -36,7 +37,7 @@ describe('normalize', () => {
     const item = { title: 'Test', issue: '1', series: 'Series (2020)', cover: 'http://example.com/cover.jpg', date: '2020-01-01' };
     const result = normalize(item);
     expect(result.year).toBe(2020);
-    expect(result.id).toBe('series_(2020)#1-test');
+    expect(result.id).toBe('series__2020__1-test');
   });
   
   test('converts character string to array', () => {
@@ -71,5 +72,27 @@ describe('escapeHtml', () => {
 describe('firstOf', () => {
   test('returns first non-nullish value', () => {
     expect(firstOf(null, undefined, '', 'x', 'y')).toBe('x');
+  });
+});
+
+describe('generateId', () => {
+  test('replaces special characters and keeps inputs distinct', () => {
+    const a = generateId({ title: 'A/B:C' });
+    const b = generateId({ title: 'A-B-C' });
+    const c = generateId({ title: 'ABC' });
+    expect(a).not.toBe(b);
+    expect(a).not.toBe(c);
+    expect(b).not.toBe(c);
+  });
+
+  test('generates unique ids for different comics', () => {
+    const items = [
+      { series: 'Batman', issue: '1', title: 'Night' },
+      { series: 'Batman', issue: '2', title: 'Night' },
+      { series: 'Batman', issue: '1', title: 'Day' },
+      { series: 'Superman', issue: '1', title: 'Night' },
+    ];
+    const ids = items.map((i) => generateId(i));
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });
