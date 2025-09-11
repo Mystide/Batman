@@ -24,6 +24,23 @@ export function updateStats(state, el) {
   el.count.textContent = String(state.view.length);
 }
 
+const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
+
+export function sortItems(items, order) {
+  const arr = [...items];
+  switch (order) {
+    case 'date':
+      return arr.sort((a, b) => a.ts - b.ts || collator.compare(a.title, b.title));
+    case 'event':
+      return arr.sort((a, b) =>
+        collator.compare(a.event || '', b.event || '') || collator.compare(a.title, b.title)
+      );
+    case 'title':
+    default:
+      return arr.sort((a, b) => collator.compare(a.title, b.title));
+  }
+}
+
 let currentState;
 let currentEl;
 let currentGrid;
