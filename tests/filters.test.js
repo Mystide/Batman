@@ -2,7 +2,8 @@ import { jest } from '@jest/globals';
 import { normalize } from '../src/api.js';
 
 const renderMock = jest.fn();
-await jest.unstable_mockModule('../src/render.js', () => ({ render: renderMock }));
+const sortMock = jest.fn(items => items);
+await jest.unstable_mockModule('../src/render.js', () => ({ render: renderMock, sortItems: sortMock }));
 const { apply } = await import('../src/filters.js');
 
 describe('apply', () => {
@@ -27,7 +28,7 @@ describe('apply', () => {
       myear: { value: '' },
       mevent: { value: '' },
       mchar: { value: '' },
-      msort: { value: 'dateAsc' },
+      sortOrder: { value: 'title' },
       quickHideRead: { checked: false }
     };
   }
@@ -46,7 +47,7 @@ describe('apply', () => {
     const state = createState();
     const el = createEl();
     el.mq.value = 'superman';
-    apply(state, el, new Intl.Collator('de'));
+    apply(state, el);
     expect(state.view.map(x => x.id)).toEqual(['3']);
   });
 
@@ -56,7 +57,7 @@ describe('apply', () => {
     el.mq.value = 'batman';
     el.mseries.value = 'Batman';
     el.mchar.value = 'Joker';
-    apply(state, el, new Intl.Collator('de'));
+    apply(state, el);
     expect(state.view.map(x => x.id)).toEqual(['2']);
   });
   
@@ -74,7 +75,7 @@ describe('apply', () => {
     };
     const el = createEl();
     el.mchar.value = 'Joker';
-    apply(state, el, new Intl.Collator('de'));
+    apply(state, el);
     expect(state.view.map(x => x.id)).toEqual(['1']);
   });
 });
