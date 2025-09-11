@@ -474,9 +474,23 @@ main.container {
   position: fixed;
   bottom: 1rem;
   right: 1rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  border: 1px solid var(--outline);
+  background: #0f1320;
+  color: var(--ink);
+  font-size: 24px;
+  cursor: pointer;
   display: none;
+  place-items: center;
+  z-index: 1000;
+}
+
+#toTop:hover {
+  border-color: #2b3346;
 }
 
 #toTop.show {
-  display: block;
+  display: grid;
 }
