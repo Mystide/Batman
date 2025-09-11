@@ -12,7 +12,11 @@ export async function loadData() {
       raw = JSON.parse(cacheStr);
       loaded = Array.isArray(raw) && raw.length > 0;
     }
-  } catch { /* empty */ }
+  } catch (e) {
+    console.warn('Cache konnte nicht gelesen werden', e);
+    localStorage.removeItem('data-cache');
+    localStorage.removeItem('data-cache-ts');
+  }
 
   if (!loaded) {
     try {
@@ -43,7 +47,9 @@ export async function loadData() {
       try {
         localStorage.setItem('data-cache', JSON.stringify(raw));
         localStorage.setItem('data-cache-ts', String(Date.now()));
-    } catch { /* empty */ }
+      } catch (e) {
+        console.warn('Cache konnte nicht gespeichert werden', e);
+      }
     }
   }
 
