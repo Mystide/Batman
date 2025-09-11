@@ -16,7 +16,7 @@ const $ = sel => document.querySelector(sel);
 const state = { raw: [], items: [], view: [], readSet: new Set(), idSet: new Set() };
 const el = {
   grid: $('#grid'), empty: $('#empty'),
-  mq: $('#mq'), mseries: $('#mseries'), myear: $('#myear'), mevent: $('#mevent'), mchar: $('#mchar'), msort: $('#msort'),
+  mq: $('#mq'), mseries: $('#mseries'), myear: $('#myear'), mevent: $('#mevent'), mchar: $('#mchar'), sortOrder: $('#sortOrder'),
   quickHideRead: $('#quickHideRead'),
   toggleView: $('#toggleView'),
   count: $('#count'), readCount: $('#readCount'), progress: $('#progress'),
@@ -28,8 +28,6 @@ const el = {
   offlineBanner: $('#offlineBanner'),
   toTop: $('#toTop')
 };
-
-const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
 
 function updateHeaderHeight() {
   const warning = el.tokenWarning?.offsetHeight || 0;
@@ -121,7 +119,7 @@ async function init() {
 
   buildFilters(state, el);
   loadFilters(el);
-  const applyFn = () => apply(state, el, collator);
+  const applyFn = () => apply(state, el);
   bindUI(el, applyFn);
   applyFn();
 }
