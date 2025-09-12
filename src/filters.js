@@ -1,5 +1,7 @@
 import { render, sortItems } from './render.js';
 
+let lastFocusedEl = null;
+
 export function buildFilters(state, el){
   const items = state.items;
   const collator = new Intl.Collator('de');
@@ -78,7 +80,48 @@ el.sortToggle?.addEventListener('click', () => {
   });
 }
 
-function drawer(el, open){ el.drawer.classList.toggle('open',open); document.body.classList.toggle('no-scroll',open); }
+function drawer(el, open){
+  el.drawer.classList.toggle('open', open);
+  document.body.classList.toggle('no-scroll', open);
+  el.drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+
+  if (open) {
+    lastFocusedEl = document.activeElement;
+    const focusable = Array.from(
+      el.drawer.querySelectorAll(
+        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+      )
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const trap = (e) => {
+      if (e.key === 'Tab') {
+        if (!focusable.length) {
+          e.preventDefault();
+          return;
+        }
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    el.drawer.addEventListener('keydown', trap);
+    el.drawer._focusTrap = trap;
+    first?.focus();
+  } else {
+    if (el.drawer._focusTrap) {
+      el.drawer.removeEventListener('keydown', el.drawer._focusTrap);
+      delete el.drawer._focusTrap;
+    }
+    lastFocusedEl?.focus();
+  }
+}
 
 export function saveFilters(el){
   const p={ q:el.mq.value||'', series:el.mseries.value||'', year:el.myear.value||'', event:el.mevent.value||'', char:el.mchar?el.mchar.value:'', sortOrder:el.sortOrder.value||'title', dir:el.sortToggle?.dataset.dir||'asc', hide:!!(el.quickHideRead&&el.quickHideRead.checked) };
