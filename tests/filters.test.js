@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import { normalize } from '../src/api.js';
 
 const renderMock = jest.fn();
-const sortMock = jest.fn(items => items);
+const sortMock = jest.fn((items, order, dir) => items);
 await jest.unstable_mockModule('../src/render.js', () => ({ render: renderMock, sortItems: sortMock }));
 const { apply } = await import('../src/filters.js');
 
@@ -29,6 +29,7 @@ describe('apply', () => {
       mevent: { value: '' },
       mchar: { value: '' },
       sortOrder: { value: 'title' },
+      sortToggle: { dataset: { dir: 'asc' }, textContent: '↑', setAttribute: jest.fn() },
       quickHideRead: { checked: false }
     };
   }
@@ -77,5 +78,12 @@ describe('apply', () => {
     el.mchar.value = 'Joker';
     apply(state, el);
     expect(state.view.map(x => x.id)).toEqual(['1']);
+  });
+  test('passes sort direction to sortItems', () => {
+    const state = createState();
+    const el = createEl();
+    el.sortToggle.dataset.dir = 'desc';
+    apply(state, el);
+    expect(sortMock).toHaveBeenCalledWith(expect.any(Array), 'title', 'desc');
   });
 });
