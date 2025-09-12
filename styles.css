@@ -190,6 +190,18 @@ header {
   outline: none;
   width: 100%;
 }
+.sort-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.sort-controls select {
+  flex: 1;
+}
+
+#sortToggle {
+  padding: 0;
+}
 .field.span-2 {
   grid-column: 1 / -1;
 }
