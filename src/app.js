@@ -16,7 +16,7 @@ const $ = sel => document.querySelector(sel);
 const state = { raw: [], items: [], view: [], readSet: new Set(), idSet: new Set() };
 const el = {
   grid: $('#grid'), empty: $('#empty'),
-  mq: $('#mq'), mseries: $('#mseries'), myear: $('#myear'), mevent: $('#mevent'), mchar: $('#mchar'), sortOrder: $('#sortOrder'),
+  mq: $('#mq'), mseries: $('#mseries'), myear: $('#myear'), mevent: $('#mevent'), mchar: $('#mchar'), sortOrder: $('#sortOrder'), sortToggle: $('#sortToggle'),
   quickHideRead: $('#quickHideRead'),
   toggleView: $('#toggleView'),
   count: $('#count'), readCount: $('#readCount'), progress: $('#progress'),
