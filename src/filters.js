@@ -41,7 +41,8 @@ export function apply(state, el){
   });
 
   const order = el.sortOrder ? el.sortOrder.value : 'title';
-  state.view = sortItems(items, order);
+  const dir = el.sortToggle?.dataset.dir || 'asc';
+  state.view = sortItems(items, order, dir);
   saveFilters(el);
   render(state, el);
 }
@@ -60,6 +61,7 @@ export function bindUI(el, applyFn){
 
   el.mResetFilters?.addEventListener('click',()=>{
     el.mseries.value=''; el.myear.value=''; el.mevent.value=''; if(el.mchar) el.mchar.value=''; el.sortOrder.value='title';
+    if(el.sortToggle){ el.sortToggle.dataset.dir='asc'; el.sortToggle.textContent='↑'; el.sortToggle.setAttribute('aria-label','Aufsteigend sortieren'); }
     el.mq.value=''; if(el.quickHideRead) el.quickHideRead.checked=false; applyFn();
   });
   el.clearSearch?.addEventListener('click',()=>{ el.mq.value=''; applyFn(); el.mq.focus(); });
@@ -67,12 +69,19 @@ export function bindUI(el, applyFn){
   [el.mq, el.mseries, el.myear, el.mevent, el.mchar, el.sortOrder]
     .forEach(c=>c && c.addEventListener('input', applyFn));
   el.quickHideRead?.addEventListener('input', applyFn);
+el.sortToggle?.addEventListener('click', () => {
+    const dir = el.sortToggle.dataset.dir === 'desc' ? 'asc' : 'desc';
+    el.sortToggle.dataset.dir = dir;
+    el.sortToggle.textContent = dir === 'desc' ? '↓' : '↑';
+    el.sortToggle.setAttribute('aria-label', dir === 'desc' ? 'Absteigend sortieren' : 'Aufsteigend sortieren');
+    applyFn();
+  });
 }
 
 function drawer(el, open){ el.drawer.classList.toggle('open',open); document.body.classList.toggle('no-scroll',open); }
 
 export function saveFilters(el){
-  const p={ q:el.mq.value||'', series:el.mseries.value||'', year:el.myear.value||'', event:el.mevent.value||'', char:el.mchar?el.mchar.value:'', sortOrder:el.sortOrder.value||'title', hide:!!(el.quickHideRead&&el.quickHideRead.checked) };
+  const p={ q:el.mq.value||'', series:el.mseries.value||'', year:el.myear.value||'', event:el.mevent.value||'', char:el.mchar?el.mchar.value:'', sortOrder:el.sortOrder.value||'title', dir:el.sortToggle?.dataset.dir||'asc', hide:!!(el.quickHideRead&&el.quickHideRead.checked) };
   try { localStorage.setItem('bat-filters', JSON.stringify(p)); }
   catch (e) { console.warn('Failed to save filters:', e); }
 }
@@ -87,6 +96,16 @@ export function loadFilters(el){
     if('event'in p) el.mevent.value=p.event||'';
     if('char'in p && el.mchar) el.mchar.value=p.char||'';
     if('sortOrder'in p) el.sortOrder.value=p.sortOrder||'title';
+    if('dir' in p && el.sortToggle){
+      const d=p.dir==='desc'?'desc':'asc';
+      el.sortToggle.dataset.dir=d;
+      el.sortToggle.textContent=d==='desc'?'↓':'↑';
+      el.sortToggle.setAttribute('aria-label', d==='desc'?'Absteigend sortieren':'Aufsteigend sortieren');
+    } else if(el.sortToggle){
+      el.sortToggle.dataset.dir='asc';
+      el.sortToggle.textContent='↑';
+      el.sortToggle.setAttribute('aria-label','Aufsteigend sortieren');
+    }
     if('hide'in p && el.quickHideRead){ el.quickHideRead.checked=!!p.hide; }
   }
   catch (e) {
