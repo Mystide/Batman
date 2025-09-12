@@ -47,6 +47,129 @@ let currentState;
 let currentEl;
 let currentGrid;
 
+function fadeOutAndRemove(card) {
+  card.classList.add('fade-out');
+  card.addEventListener('transitionend', () => card.remove(), { once: true });
+}
+
+function createCard(x, isRead) {
+  const formattedDate = formatDateDE(x.dateRaw, x.year);
+  const card = document.createElement('article');
+  card.className = 'card';
+  card.dataset.id = x.id;
+  card.style.opacity = '0';
+  card.style.transform = 'translateY(10px)';
+  const dcuiUrl = String(x.dcui || x.dcui_link || '').trim();
+  const dcuiValid = isValidUrl(dcuiUrl);
+  const coverUrl = isValidUrl(x.cover) ? x.cover : null;
+
+  const toggle = document.createElement('button');
+  toggle.className = 'read-toggle';
+  if (isRead) toggle.classList.add('active');
+  toggle.setAttribute('aria-pressed', String(isRead));
+  toggle.dataset.id = x.id;
+  toggle.textContent = isRead ? 'Gelesen' : 'Ungelesen';
+  card.appendChild(toggle);
+
+  const coverWrap = document.createElement('div');
+  coverWrap.className = 'cover-wrap';
+  if (coverUrl) {
+    const img = document.createElement('img');
+    img.className = 'cover';
+    img.alt = `${x.title} Cover`;
+    img.loading = 'lazy';
+    img.fetchpriority = 'low';
+    img.decoding = 'async';
+    img.src = coverUrl;
+    img.referrerPolicy = 'strict-origin-when-cross-origin';
+    img.addEventListener('error', () => {
+      img.style.display = 'none';
+      const tag = document.createElement('div');
+      tag.className = 'tag';
+      tag.style.opacity = '.7';
+      tag.textContent = 'Kein Cover';
+      coverWrap.appendChild(tag);
+    });
+    coverWrap.appendChild(img);
+  } else {
+    const tag = document.createElement('div');
+    tag.className = 'tag';
+    tag.style.opacity = '.7';
+    tag.textContent = 'Kein Cover';
+    coverWrap.appendChild(tag);
+  }
+
+  if (x.year) {
+    const span = document.createElement('span');
+    span.className = 'year-tag';
+    span.textContent = String(x.year);
+    coverWrap.appendChild(span);
+  }
+  if (dcuiValid) {
+    const a = document.createElement('a');
+    a.className = 'dcui-link';
+    a.href = dcuiUrl;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    const logo = document.createElement('img');
+    logo.src = 'icons/dc-logo.png';
+    logo.alt = 'DC Logo';
+    a.appendChild(logo);
+    coverWrap.appendChild(a);
+  }
+  card.appendChild(coverWrap);
+
+  const content = document.createElement('div');
+  content.className = 'content';
+  const h = document.createElement('div');
+  h.className = 'h';
+  h.textContent = x.title;
+  if (x.issue) {
+    const small = document.createElement('small');
+    small.className = 'issue-num';
+    small.textContent = `#${x.issue}`;
+    h.appendChild(document.createTextNode(' '));
+    h.appendChild(small);
+  }
+  content.appendChild(h);
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+
+  if (formattedDate) {
+    const row = document.createElement('div');
+    row.className = 'meta-row';
+    const b = document.createElement('b');
+    b.textContent = 'Datum:';
+    row.appendChild(b);
+    row.appendChild(document.createTextNode(' ' + formattedDate));
+    meta.appendChild(row);
+  }
+  if (x.series) {
+    const row = document.createElement('div');
+    row.className = 'meta-row';
+    const b = document.createElement('b');
+    b.textContent = 'Serie:';
+    row.appendChild(b);
+    const span = document.createElement('span');
+    span.textContent = shortSeries(x.series);
+    row.appendChild(span);
+    meta.appendChild(row);
+  }
+  if (x.event) {
+    const row = document.createElement('div');
+    row.className = 'meta-row';
+    const b = document.createElement('b');
+    b.textContent = 'Event:';
+    row.appendChild(b);
+    row.appendChild(document.createTextNode(' ' + x.event));
+    meta.appendChild(row);
+  }
+  content.appendChild(meta);
+  card.appendChild(content);
+  return card;
+}
+
 function handleToggle(btn, state, el) {
   const id = btn.dataset.id;
   const wasRead = state.readSet.has(id);
@@ -94,7 +217,7 @@ function handleToggle(btn, state, el) {
 
   if (el.quickHideRead && el.quickHideRead.checked && nowRead) {
     const card = btn.closest('.card');
-    card?.remove();
+    if (card) fadeOutAndRemove(card);
     updateStats(state, el);
     return;
   }
@@ -110,131 +233,43 @@ function onGridClick(event) {
 export function render(state, el) {
   currentState = state;
   currentEl = el;
-  
+
   if (currentGrid !== el.grid) {
     if (currentGrid) currentGrid.removeEventListener('click', onGridClick);
     currentGrid = el.grid;
     currentGrid.addEventListener('click', onGridClick);
   }
-
-  el.grid.innerHTML = '';
+  const existing = new Map();
+  for (const card of Array.from(el.grid.children)) {
+    if (card.dataset.id) existing.set(card.dataset.id, card);
+  }
   const fragment = document.createDocumentFragment();
+  const newCards = [];
   for (const x of state.view) {
     const isRead = state.readSet.has(x.id);
-    const formattedDate = formatDateDE(x.dateRaw, x.year);
-    const card = document.createElement('article');
-    card.className = 'card';
-    const dcuiUrl = String(x.dcui || x.dcui_link || '').trim();
-    const dcuiValid = isValidUrl(dcuiUrl);
-    const coverUrl = isValidUrl(x.cover) ? x.cover : null;
-
-    const toggle = document.createElement('button');
-    toggle.className = 'read-toggle';
-    if (isRead) toggle.classList.add('active');
-    toggle.setAttribute('aria-pressed', String(isRead));
-    toggle.dataset.id = x.id;
-    toggle.textContent = isRead ? 'Gelesen' : 'Ungelesen';
-    card.appendChild(toggle);
-
-    const coverWrap = document.createElement('div');
-    coverWrap.className = 'cover-wrap';
-    if (coverUrl) {
-      const img = document.createElement('img');
-      img.className = 'cover';
-      img.alt = `${x.title} Cover`;
-      img.loading = 'lazy';
-      img.fetchpriority = 'low';
-      img.decoding = 'async';
-      img.src = coverUrl;
-      img.referrerPolicy = 'strict-origin-when-cross-origin';
-      img.addEventListener('error', () => {
-        img.style.display = 'none';
-        const tag = document.createElement('div');
-        tag.className = 'tag';
-        tag.style.opacity = '.7';
-        tag.textContent = 'Kein Cover';
-        coverWrap.appendChild(tag);
-      });
-      coverWrap.appendChild(img);
+    let card = existing.get(String(x.id));
+    if (card) {
+      existing.delete(String(x.id));
+      const toggle = card.querySelector('.read-toggle');
+      if (toggle) {
+        toggle.classList.toggle('active', isRead);
+        toggle.setAttribute('aria-pressed', String(isRead));
+        toggle.textContent = isRead ? 'Gelesen' : 'Ungelesen';
+      }
     } else {
-      const tag = document.createElement('div');
-      tag.className = 'tag';
-      tag.style.opacity = '.7';
-      tag.textContent = 'Kein Cover';
-      coverWrap.appendChild(tag);
+      card = createCard(x, isRead);
+      newCards.push(card);
     }
-
-    if (x.year) {
-      const span = document.createElement('span');
-      span.className = 'year-tag';
-      span.textContent = String(x.year);
-      coverWrap.appendChild(span);
-    }
-    if (dcuiValid) {
-      const a = document.createElement('a');
-      a.className = 'dcui-link';
-      a.href = dcuiUrl;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      const logo = document.createElement('img');
-      logo.src = 'icons/dc-logo.png';
-      logo.alt = 'DC Logo';
-      a.appendChild(logo);
-      coverWrap.appendChild(a);
-    }
-    card.appendChild(coverWrap);
-
-    const content = document.createElement('div');
-    content.className = 'content';
-    const h = document.createElement('div');
-    h.className = 'h';
-    h.textContent = x.title;
-    if (x.issue) {
-      const small = document.createElement('small');
-      small.className = 'issue-num';
-      small.textContent = `#${x.issue}`;
-      h.appendChild(document.createTextNode(' '));
-      h.appendChild(small);
-    }
-    content.appendChild(h);
-
-    const meta = document.createElement('div');
-    meta.className = 'meta';
-
-    if (formattedDate) {
-      const row = document.createElement('div');
-      row.className = 'meta-row';
-      const b = document.createElement('b');
-      b.textContent = 'Datum:';
-      row.appendChild(b);
-      row.appendChild(document.createTextNode(' ' + formattedDate));
-      meta.appendChild(row);
-    }
-    if (x.series) {
-      const row = document.createElement('div');
-      row.className = 'meta-row';
-      const b = document.createElement('b');
-      b.textContent = 'Serie:';
-      row.appendChild(b);
-      const span = document.createElement('span');
-      span.textContent = shortSeries(x.series);
-      row.appendChild(span);
-      meta.appendChild(row);
-    }
-    if (x.event) {
-      const row = document.createElement('div');
-      row.className = 'meta-row';
-      const b = document.createElement('b');
-      b.textContent = 'Event:';
-      row.appendChild(b);
-      row.appendChild(document.createTextNode(' ' + x.event));
-      meta.appendChild(row);
-    }
-    content.appendChild(meta);
-    card.appendChild(content);
     fragment.appendChild(card);
   }
   el.grid.appendChild(fragment);
+  requestAnimationFrame(() => {
+    for (const card of newCards) {
+      card.style.opacity = '1';
+      card.style.transform = '';
+    }
+  });
+  for (const card of existing.values()) fadeOutAndRemove(card);
   updateStats(state, el);
   el.empty.hidden = state.view.length > 0;
 }
