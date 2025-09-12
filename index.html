@@ -48,11 +48,14 @@
         <div class="field"><label for="mchar">Figur</label><select id="mchar"><option value="">Alle Figuren</option></select></div>
         <div class="field">
           <label for="sortOrder">Sortierung</label>
-          <select id="sortOrder">
-            <option value="title">Titel</option>
-            <option value="date">Datum</option>
-            <option value="event">Event</option>
-          </select>
+          <div class="sort-controls">
+            <select id="sortOrder">
+              <option value="title">Titel</option>
+              <option value="date">Datum</option>
+              <option value="event">Event</option>
+            </select>
+            <button id="sortToggle" class="icon-btn" aria-label="Aufsteigend sortieren">↑</button>
+          </div>
         </div>
         <div class="drawer-actions">
           <button id="mResetFilters" class="ghost-btn danger" style="flex:1">Alle Filter zurücksetzen</button>
