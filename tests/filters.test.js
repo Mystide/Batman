@@ -2,7 +2,11 @@ import { jest } from '@jest/globals';
 import { normalize } from '../src/api.js';
 
 const renderMock = jest.fn();
-const sortMock = jest.fn((items, order, dir) => items);
+const sortMock = jest.fn((items, order, dir) => {
+  void order;
+  void dir;
+  return items;
+});
 await jest.unstable_mockModule('../src/render.js', () => ({ render: renderMock, sortItems: sortMock }));
 const { apply } = await import('../src/filters.js');
 
@@ -61,7 +65,7 @@ describe('apply', () => {
     apply(state, el);
     expect(state.view.map(x => x.id)).toEqual(['2']);
   });
-  
+
   test('filters by character with mixed input types', () => {
     const raw = [
       { id: '1', title: 'Item1', characters: 'Batman, Joker' },
