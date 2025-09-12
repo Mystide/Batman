@@ -26,18 +26,20 @@ export function updateStats(state, el) {
 
 const collator = new Intl.Collator('de', { numeric: true, sensitivity: 'base' });
 
-export function sortItems(items, order) {
+export function sortItems(items, order, dir = 'asc') {
   const arr = [...items];
+  const mult = dir === 'desc' ? -1 : 1;
   switch (order) {
     case 'date':
-      return arr.sort((a, b) => a.ts - b.ts || collator.compare(a.title, b.title));
+      return arr.sort((a, b) => (a.ts - b.ts || collator.compare(a.title, b.title)) * mult);
     case 'event':
-      return arr.sort((a, b) =>
-        collator.compare(a.event || '', b.event || '') || collator.compare(a.title, b.title)
+      return arr.sort(
+        (a, b) =>
+          (collator.compare(a.event || '', b.event || '') || collator.compare(a.title, b.title)) * mult
       );
     case 'title':
     default:
-      return arr.sort((a, b) => collator.compare(a.title, b.title));
+      return arr.sort((a, b) => collator.compare(a.title, b.title) * mult);
   }
 }
 
