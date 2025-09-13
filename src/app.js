@@ -25,6 +25,7 @@ const el = {
   tokenWarning: $('#tokenWarning'), tokenLink: $('#tokenLink'),
   tokenDialog: $('#tokenDialog'), tokenForm: $('#tokenForm'), tokenInput: $('#tokenInput'),
   loadError: $('#loadError'),
+  loading: $('#loading'),
   offlineBanner: $('#offlineBanner'),
   toTop: $('#toTop')
 };
@@ -106,12 +107,19 @@ async function init() {
     state.readSet = new Set(list);
   }
 
+  if (el.loading) {
+    el.loading.hidden = false;
+  }
   try {
     state.raw = await loadData();
   } catch (err) {
     console.warn('Failed to load data', err);
     showLoadError('Fehler beim Laden der Daten.');
     state.raw = [];
+} finally {
+    if (el.loading) {
+      el.loading.hidden = true;
+    }
   }
 
   state.items = state.raw.map(normalize);
