@@ -65,6 +65,10 @@ body {
   z-index: 1000;
 }
 
+#loading[hidden] {
+  display: none;
+}
+
 #loading::after {
   content: '';
   display: block;
